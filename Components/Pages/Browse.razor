@@ -1,0 +1,211 @@
+@page "/browse"
+
+<main class="browse-page">
+    <div class="container py-4">
+    <div class="row g-4">
+        <!-- Calendar & Filters -->
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 mb-3 browse-card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-calendar-week text-primary"></i>
+                        Calendar
+                    </h5>
+
+                    <!-- Placeholder calendar (visual only) -->
+                    <table class="table table-sm text-center align-middle mb-0 browse-calendar">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Sun</th>
+                                <th>Mon</th>
+                                <th>Tue</th>
+                                <th>Wed</th>
+                                <th>Thu</th>
+                                <th>Fri</th>
+                                <th>Sat</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int week = 0; week < 5; week++)
+                            {
+                                <tr>
+                                    @for (int day = 1; day <= 7; day++)
+                                    {
+                                        var date = week * 7 + day;
+                                        var hasEntry = CalendarSampleDates.Contains(date);
+                                        var isToday = date == DateTime.Today.Day;
+                                        <td>
+                                            <span class="badge rounded-circle @(isToday ? "text-bg-primary" : hasEntry ? "text-bg-light" : "bg-transparent border")"
+                                                  style="width: 2rem; height: 2rem; line-height: 1.2rem;">
+                                                @date
+                                            </span>
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-4 browse-card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-funnel text-primary"></i>
+                        Filters
+                    </h5>
+
+                    <div class="mb-3">
+                        <label class="form-label small text-muted text-uppercase mb-1">Search</label>
+                        <input class="form-control" placeholder="Search by title or content..." />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small text-muted text-uppercase mb-1">Date Range</label>
+                        <div class="d-flex gap-2">
+                            <input type="date" class="form-control" />
+                            <input type="date" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small text-muted text-uppercase mb-1">Mood</label>
+                        <select class="form-select">
+                            <option value="">Any mood</option>
+                            <option>Positive</option>
+                            <option>Neutral</option>
+                            <option>Negative</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small text-muted text-uppercase mb-1">Tags</label>
+                        <select class="form-select" multiple size="4">
+                            <option>Work</option>
+                            <option>Health</option>
+                            <option>Travel</option>
+                            <option>Reflection</option>
+                            <option>Family</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary w-100 mb-2">Apply filters</button>
+                    <button class="btn btn-outline-secondary w-100">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline / List View -->
+        <div class="col-12 col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 h-100 browse-card">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0 d-flex align-items-center gap-2">
+                            <i class="bi bi-journal-text text-primary"></i>
+                            Entries
+                        </h5>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-secondary active">
+                                <i class="bi bi-list-ul me-1"></i>List
+                            </button>
+                            <button class="btn btn-outline-secondary">
+                                <i class="bi bi-calendar3 me-1"></i>Timeline
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="list-group list-group-flush mb-3 browse-list">
+                        @foreach (var entry in PagedEntries)
+                        {
+                            <button class="list-group-item list-group-item-action py-3 browse-list-item">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <div class="fw-semibold">@entry.Title</div>
+                                        <small class="text-muted">
+                                            @entry.Date.ToString("ddd, MMM dd yyyy") · @entry.PrimaryMood
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge rounded-pill bg-light text-dark border me-1">@entry.Category</span>
+                                        @foreach (var tag in entry.Tags)
+                                        {
+                                            <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis me-1">@tag</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="mt-2 small text-muted text-truncate">
+                                    @entry.Snippet
+                                </div>
+                            </button>
+                        }
+                    </div>
+
+                    <!-- Pagination (visual only) -->
+                    <nav class="mt-auto">
+                        <ul class="pagination pagination-sm justify-content-end mb-0">
+                            <li class="page-item disabled">
+                                <span class="page-link">Previous</span>
+                            </li>
+                            <li class="page-item active"><span class="page-link">1</span></li>
+                            <li class="page-item"><button class="page-link">2</button></li>
+                            <li class="page-item"><button class="page-link">3</button></li>
+                            <li class="page-item">
+                                <button class="page-link">Next</button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</main>
+
+@code {
+    private readonly int[] CalendarSampleDates = { 1, 2, 3, 5, 7, 10, 11, 15, 18, 21, 25, 28 };
+
+    private List<EntryListItem> PagedEntries { get; set; } = new()
+    {
+        new EntryListItem
+        {
+            Title = "Morning run in the park",
+            Date = DateTime.Today,
+            PrimaryMood = "Energized",
+            Category = "Fitness",
+            Tags = new [] { "Exercise", "Health" },
+            Snippet = "Felt surprisingly light today. The air was cool and the sky just beginning to turn orange..."
+        },
+        new EntryListItem
+        {
+            Title = "Planning next week",
+            Date = DateTime.Today.AddDays(-1),
+            PrimaryMood = "Thoughtful",
+            Category = "Planning",
+            Tags = new [] { "Work", "Projects" },
+            Snippet = "Spent time outlining priorities for next week. Trying to balance deep work with rest..."
+        },
+        new EntryListItem
+        {
+            Title = "Movie night with friends",
+            Date = DateTime.Today.AddDays(-2),
+            PrimaryMood = "Happy",
+            Category = "Friends",
+            Tags = new [] { "Friends", "Relaxed" },
+            Snippet = "Laughed so much my cheeks hurt. It felt good to disconnect from screens for a while..."
+        }
+    };
+
+    private class EntryListItem
+    {
+        public string Title { get; set; } = "";
+        public DateTime Date { get; set; }
+        public string PrimaryMood { get; set; } = "";
+        public string Category { get; set; } = "";
+        public string[] Tags { get; set; } = Array.Empty<string>();
+        public string Snippet { get; set; } = "";
+    }
+}
+
+
+
+

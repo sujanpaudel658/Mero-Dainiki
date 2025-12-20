@@ -1,0 +1,194 @@
+﻿@page "/"
+
+<main class="home-page">
+    <div class="container py-4">
+        <!-- Hero Section -->
+        <div class="home-hero fade-in">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="bi bi-journal-bookmark-fill me-2"></i>
+                    <span>Mero Dainiki · Your Personal Journal</span>
+                </div>
+                <h1 class="hero-title">
+                    Capture Your Thoughts,<br />
+                    <span class="gradient-text">Preserve Your Memories</span>
+                </h1>
+                <p class="hero-subtitle">
+                    A beautiful, secure space to document your daily journey, track your moods, and reflect on life's moments.
+                </p>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row g-4 mb-4 fade-up">
+            <div class="col-12 col-md-3">
+                <div class="stat-card stat-card-primary">
+                    <div class="stat-icon">
+                        <i class="bi bi-fire"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">7</div>
+                        <div class="stat-label">Day Streak</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-3">
+                <div class="stat-card stat-card-success">
+                    <div class="stat-icon">
+                        <i class="bi bi-journal-text"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">42</div>
+                        <div class="stat-label">Total Entries</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-3">
+                <div class="stat-card stat-card-info">
+                    <div class="stat-icon">
+                        <i class="bi bi-heart-fill"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">18</div>
+                        <div class="stat-label">This Month</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-3">
+                <div class="stat-card stat-card-warning">
+                    <div class="stat-icon">
+                        <i class="bi bi-tag-fill"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">12</div>
+                        <div class="stat-label">Active Tags</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Action Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-12 col-lg-4">
+                <div class="home-card action-card-primary" @onclick="NavigateToEntry">
+                    <div class="card-icon-large">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <div class="card-content">
+                        <h5 class="card-title">
+                            <i class="bi bi-plus-circle-fill me-2"></i>New Entry
+                        </h5>
+                        <p class="card-description">
+                            Start writing today's journal entry. Capture your thoughts, feelings, and experiences.
+                        </p>
+                        <div class="card-action">
+                            <span>Write now</span>
+                            <i class="bi bi-arrow-right ms-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="home-card action-card-success" @onclick="NavigateToBrowse">
+                    <div class="card-icon-large">
+                        <i class="bi bi-calendar-week"></i>
+                    </div>
+                    <div class="card-content">
+                        <h5 class="card-title">
+                            <i class="bi bi-journal-text me-2"></i>Browse Entries
+                        </h5>
+                        <p class="card-description">
+                            Explore your past entries through calendar view or timeline. Search and filter by date, mood, or tags.
+                        </p>
+                        <div class="card-action">
+                            <span>Browse now</span>
+                            <i class="bi bi-arrow-right ms-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="home-card action-card-info" @onclick="NavigateToAnalytics">
+                    <div class="card-icon-large">
+                        <i class="bi bi-bar-chart-line"></i>
+                    </div>
+                    <div class="card-content">
+                        <h5 class="card-title">
+                            <i class="bi bi-graph-up-arrow me-2"></i>Analytics
+                        </h5>
+                        <p class="card-description">
+                            View insights about your journaling habits, mood trends, and writing patterns over time.
+                        </p>
+                        <div class="card-action">
+                            <span>View analytics</span>
+                            <i class="bi bi-arrow-right ms-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secondary Actions -->
+        <div class="row g-4">
+            <div class="col-12 col-md-6">
+                <div class="home-card-secondary" @onclick="NavigateToDashboard">
+                    <div class="d-flex align-items-center">
+                        <div class="secondary-icon-wrapper">
+                            <i class="bi bi-speedometer2"></i>
+                        </div>
+                        <div class="ms-3 flex-grow-1">
+                            <h6 class="mb-1">Dashboard</h6>
+                            <p class="text-muted small mb-0">Overview of your journaling activity</p>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="home-card-secondary" @onclick="NavigateToSettings">
+                    <div class="d-flex align-items-center">
+                        <div class="secondary-icon-wrapper">
+                            <i class="bi bi-gear-fill"></i>
+                        </div>
+                        <div class="ms-3 flex-grow-1">
+                            <h6 class="mb-1">Settings</h6>
+                            <p class="text-muted small mb-0">Customize your journal preferences</p>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@code {
+    [Inject] private NavigationManager? NavigationManager { get; set; }
+
+    private void NavigateToEntry()
+    {
+        NavigationManager?.NavigateTo("/entry");
+    }
+
+    private void NavigateToBrowse()
+    {
+        NavigationManager?.NavigateTo("/browse");
+    }
+
+    private void NavigateToAnalytics()
+    {
+        NavigationManager?.NavigateTo("/analytics");
+    }
+
+    private void NavigateToDashboard()
+    {
+        NavigationManager?.NavigateTo("/dashboard");
+    }
+
+    private void NavigateToSettings()
+    {
+        Console.WriteLine("Settings clicked");
+    }
+}

@@ -1,0 +1,243 @@
+@page "/analytics"
+
+<main class="analytics-page">
+    <div class="container py-4">
+    <div class="row g-4">
+        <!-- Mood distribution & most frequent mood -->
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100 analytics-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">Mood Distribution</h5>
+                        <select class="form-select form-select-sm" style="width: 140px;">
+                            <option>Last 30 days</option>
+                            <option>Last 90 days</option>
+                            <option>This year</option>
+                            <option>All time</option>
+                        </select>
+                    </div>
+
+                    <!-- Simple bar-style chart (visual only) -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>Positive</span>
+                            <span class="text-muted">58%</span>
+                        </div>
+                        <div class="progress mb-2" style="height: 10px;">
+                            <div class="progress-bar bg-success" style="width: 58%;"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>Neutral</span>
+                            <span class="text-muted">24%</span>
+                        </div>
+                        <div class="progress mb-2" style="height: 10px;">
+                            <div class="progress-bar bg-secondary" style="width: 24%;"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>Negative</span>
+                            <span class="text-muted">18%</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-danger" style="width: 18%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="border rounded-3 p-3 bg-light-subtle">
+                        <div class="small text-muted text-uppercase mb-1">Most frequent mood</div>
+                        <div class="h5 mb-0">Grateful</div>
+                        <small class="text-muted">Appeared 12 times in the selected range.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tag breakdown & most used tags -->
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100 analytics-card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Tags Overview</h5>
+
+                    <div class="mb-3">
+                        <div class="small text-muted text-uppercase mb-1">Most used tags</div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge rounded-pill text-bg-primary">Reflection (14)</span>
+                            <span class="badge rounded-pill text-bg-secondary">Work (9)</span>
+                            <span class="badge rounded-pill text-bg-success">Health (7)</span>
+                            <span class="badge rounded-pill text-bg-info">Family (6)</span>
+                            <span class="badge rounded-pill text-bg-warning text-dark">Travel (4)</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="small text-muted text-uppercase mb-2">Tag breakdown</div>
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Entries</th>
+                                    <th>Share</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Work & Career</td>
+                                    <td>12</td>
+                                    <td>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-primary" style="width: 32%;"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Health & Fitness</td>
+                                    <td>9</td>
+                                    <td>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-success" style="width: 26%;"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Family & Friends</td>
+                                    <td>8</td>
+                                    <td>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-info" style="width: 22%;"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Personal Growth</td>
+                                    <td>7</td>
+                                    <td>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-warning" style="width: 20%;"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Streaks & missed days -->
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 h-100 analytics-card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Consistency</h5>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted small text-uppercase">Current streak</span>
+                            <span class="fw-semibold">7 days</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted small text-uppercase">Longest streak</span>
+                            <span class="fw-semibold">21 days</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted small text-uppercase">Missed days</span>
+                            <span class="fw-semibold">5 days</span>
+                        </div>
+
+                        <small class="text-muted">
+                            Great job! You’re writing more days than you skip. Try to keep your current streak going this month.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Journaling activity summary -->
+        <div class="col-12 col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 h-100 analytics-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="card-title mb-1">Journaling Activity</h5>
+                            <small class="text-muted">Entries logged and consistency by week</small>
+                        </div>
+                        <select class="form-select form-select-sm" style="width: 160px;">
+                            <option>Last 8 weeks</option>
+                            <option>Last 12 weeks</option>
+                            <option>This year</option>
+                        </select>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6 col-md-3">
+                            <div class="stat-chip">
+                                <div class="stat-chip-label text-muted text-uppercase small">Entries</div>
+                                <div class="stat-chip-value fw-bold">56</div>
+                                <div class="stat-chip-sub text-success">+8 vs last period</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-chip">
+                                <div class="stat-chip-label text-muted text-uppercase small">Active days</div>
+                                <div class="stat-chip-value fw-bold">34</div>
+                                <div class="stat-chip-sub text-success">78% of days</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-chip">
+                                <div class="stat-chip-label text-muted text-uppercase small">Missed days</div>
+                                <div class="stat-chip-value fw-bold">10</div>
+                                <div class="stat-chip-sub text-danger">Focus this week</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-chip">
+                                <div class="stat-chip-label text-muted text-uppercase small">Avg per week</div>
+                                <div class="stat-chip-value fw-bold">7</div>
+                                <div class="stat-chip-sub text-muted">Entries/week</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Simple weekly bars (visual only) -->
+                    <div class="bg-light rounded-3 p-3" style="min-height: 160px;">
+                        <div class="small text-muted mb-2">Entries per week</div>
+                        <div class="d-flex align-items-end gap-2" style="height: 110px;">
+                            @foreach (var week in WeeklyEntries)
+                            {
+                                <div class="activity-bar" style="height: @($"{week.HeightPx}px");" title="@week.Label">
+                                    <span class="activity-bar-value">@week.Value</span>
+                                </div>
+                            }
+                        </div>
+                        <small class="text-muted">Keep a steady rhythm: aim for 5+ entries each week.</small>
+                    </div>
+                </div>
+        </div>
+    </div>
+    </div>
+    </div>
+</main>
+
+@code {
+    private List<WeeklyEntryPoint> WeeklyEntries { get; set; } = new()
+    {
+        new WeeklyEntryPoint { Label = "Week 1", Value = 5, HeightPx = 40 },
+        new WeeklyEntryPoint { Label = "Week 2", Value = 8, HeightPx = 70 },
+        new WeeklyEntryPoint { Label = "Week 3", Value = 6, HeightPx = 55 },
+        new WeeklyEntryPoint { Label = "Week 4", Value = 9, HeightPx = 80 },
+        new WeeklyEntryPoint { Label = "Week 5", Value = 7, HeightPx = 60 },
+        new WeeklyEntryPoint { Label = "Week 6", Value = 5, HeightPx = 40 },
+        new WeeklyEntryPoint { Label = "Week 7", Value = 10, HeightPx = 90 },
+        new WeeklyEntryPoint { Label = "Week 8", Value = 6, HeightPx = 55 },
+    };
+
+    private class WeeklyEntryPoint
+    {
+        public string Label { get; set; } = string.Empty;
+        public int Value { get; set; }
+        public int HeightPx { get; set; }
+    }
+}
+
+

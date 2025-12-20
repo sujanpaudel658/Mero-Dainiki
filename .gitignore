@@ -1,0 +1,30 @@
+# .NET & Visual Studio
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.vs/
+.vscode/
+# OS generated
+.DS_Store
+Thumbs.db
+# Rider
+.idea/
+# Logs
+*.log
+# MAUI
+*.apk
+*.aab
+*.app
+*.ipa
+*.xcarchive
+*.xcuserstate
+*.xcworkspace
+*.xcuserdata
+*.crash
+*.pdb
+# Others
+node_modules/
+wwwroot/css/bootstrap/

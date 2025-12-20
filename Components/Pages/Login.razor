@@ -1,0 +1,204 @@
+@page "/login"
+@using Microsoft.AspNetCore.Components.Web
+
+<main class="login-page-root">
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Logo/Brand Section -->
+            <div class="text-center mb-4 fade-in">
+                <div class="login-icon-wrapper mb-3">
+                    <i class="bi bi-lock-fill"></i>
+                </div>
+                <h1 class="fw-bold mb-2">Mero Dainiki</h1>
+                <p class="text-muted mb-0">Secure your journal</p>
+            </div>
+
+            <!-- Login Form -->
+            <div class="login-form fade-up">
+                <!-- Toggle between Password and PIN -->
+                <div class="btn-group w-100 mb-4" role="group">
+                    <input type="radio" class="btn-check" name="authType" id="authPassword" checked='@(AuthType == "password")' @onchange='@(() => AuthType = "password")' />
+
+                    <label class="btn btn-outline-primary" for="authPassword">
+                        <i class="bi bi-key-fill me-2"></i>Password
+                    </label>
+                    <input type="radio" class="btn-check" name="authType" id="authPIN" checked='@(AuthType == "pin")' @onchange='@(() => AuthType = "pin")' />
+                    <label class="btn btn-outline-primary" for="authPIN">
+                        <i class="bi bi-shield-lock-fill me-2"></i>PIN
+                    </label>
+                </div>
+
+                @if (AuthType == "password")
+                {
+                    <!-- Password Input -->
+                    <div class="mb-3">
+                        <label for="password" class="form-label fw-semibold">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-lock-fill"></i>
+                            </span>
+                            <input type='@(ShowPassword ? "text" : "password")' 
+                                   class="form-control form-control-lg" 
+                                   id="password" 
+                                   placeholder="Enter your password"
+                                   @bind="Password"
+                                   @onkeypress="HandleKeyPress" />
+                            <button class="btn btn-outline-secondary" type="button" @onclick="TogglePasswordVisibility">
+                                <i class='bi bi-eye@(ShowPassword ? "-slash" : "")-fill'></i>
+                            </button>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <!-- PIN Input -->
+                    <div class="mb-3">
+                        <label for="pin" class="form-label fw-semibold">PIN</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-shield-lock-fill"></i>
+                            </span>
+                            <input type="password" 
+                                   class="form-control form-control-lg text-center" 
+                                   id="pin" 
+                                   placeholder="Enter 4-6 digit PIN"
+                                   maxlength="6"
+                                   @bind="PIN"
+                                   @onkeypress="HandleKeyPress"
+                                   style="font-size: 1.5rem; letter-spacing: 0.5rem;" />
+                        </div>
+                        <small class="text-muted">Enter 4-6 digits</small>
+                    </div>
+                }
+
+                <!-- Remember Me / Forgot Password -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="rememberMe" @bind="RememberMe" />
+                        <label class="form-check-label" for="rememberMe">
+                            Remember me
+                        </label>
+                    </div>
+                    <a href="#" class="text-decoration-none small" @onclick="HandleForgotPassword" @onclick:preventDefault>
+                        Forgot @(AuthType == "password" ? "password" : "PIN")?
+                    </a>
+                </div>
+
+                <!-- Error Message -->
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="alert alert-danger d-flex align-items-center mb-3" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <div>@ErrorMessage</div>
+                    </div>
+                }
+
+                <!-- Login Button -->
+                <button class="btn btn-primary btn-lg w-100 mb-3 login-btn" 
+                        @onclick="HandleLogin" 
+                        disabled="@IsLoading">
+                    @if (IsLoading)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <span>Authenticating...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-box-arrow-in-right me-2"></i>
+                        <span>Login</span>
+                    }
+                </button>
+
+                <!-- First Time Setup Link -->
+                <div class="text-center">
+                    <small class="text-muted">
+                        First time? <a href="#" class="text-decoration-none" @onclick="HandleFirstTimeSetup" @onclick:preventDefault>Set up your account</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Notice -->
+        <div class="text-center mt-4 fade-in-delayed">
+            <small class="text-muted">
+                <i class="bi bi-shield-check me-1"></i>
+                Your data is encrypted and stored locally
+            </small>
+        </div>
+    </div>
+</main>
+
+@code {
+    private string AuthType { get; set; } = "password";
+    private string Password { get; set; } = string.Empty;
+    private string PIN { get; set; } = string.Empty;
+    private bool ShowPassword { get; set; } = false;
+    private bool RememberMe { get; set; } = false;
+    private bool IsLoading { get; set; } = false;
+    private string? ErrorMessage { get; set; }
+
+    private void TogglePasswordVisibility()
+    {
+        ShowPassword = !ShowPassword;
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await HandleLogin();
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        ErrorMessage = null;
+
+        if (AuthType == "password")
+        {
+            if (string.IsNullOrWhiteSpace(Password))
+            {
+                ErrorMessage = "Please enter your password";
+                return;
+            }
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(PIN) || PIN.Length < 4)
+            {
+                ErrorMessage = "Please enter a valid PIN (4-6 digits)";
+                return;
+            }
+        }
+
+        IsLoading = true;
+        
+        // Simulate authentication delay
+        await Task.Delay(800);
+
+        // TODO: Implement actual authentication logic here
+        // For now, this is just a UI mockup
+        Console.WriteLine($"Login attempt with {AuthType}: {(AuthType == "password" ? "***" : PIN)}");
+        
+        // Simulate success (in real app, validate against stored credentials)
+        // NavigationManager.NavigateTo("/dashboard");
+        
+        IsLoading = false;
+        
+        // For demo purposes, show success message
+        // In production, redirect to dashboard or home
+    }
+
+    private void HandleForgotPassword()
+    {
+        // TODO: Implement forgot password/PIN flow
+        Console.WriteLine($"Forgot {AuthType} clicked");
+    }
+
+    private void HandleFirstTimeSetup()
+    {
+        // TODO: Navigate to setup page
+        Console.WriteLine("First time setup clicked");
+    }
+}
+

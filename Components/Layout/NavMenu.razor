@@ -1,0 +1,56 @@
+﻿<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">Mero-Dainiki</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" 
+     onclick="document.querySelector('.navbar-toggler').click()">
+
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill" aria-hidden="true"></span>
+                home
+            </NavLink>
+        </div> 
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/dashboard">
+                <span class="bi bi-speedometer2" aria-hidden="true"></span>
+                Dashboard
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/entry">
+                <span class="bi bi-journal-plus" aria-hidden="true"></span>
+                Today&#39;s Entry
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/browse">
+                <span class="bi bi-calendar-week" aria-hidden="true"></span>
+                Browse
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/analytics">
+                <span class="bi bi-graph-up" aria-hidden="true"></span>
+                Analytics
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3 mt-auto">
+            <NavLink class="nav-link" href="/login">
+                <span class="bi bi-box-arrow-in-right" aria-hidden="true"></span>
+                Login
+            </NavLink>
+        </div>
+    </nav>
+
+</div>

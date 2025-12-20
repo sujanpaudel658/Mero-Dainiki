@@ -1,0 +1,255 @@
+@page "/dashboard"
+
+<main class="dashboard-page">
+    <div class="container py-4">
+        <!-- Page Header -->
+        <div class="dashboard-header mb-4 fade-in">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h1 class="dashboard-title mb-2">Dashboard</h1>
+                    <p class="text-muted mb-0">Welcome back! Here's your journaling overview.</p>
+                </div>
+                <div class="dashboard-date">
+                    <i class="bi bi-calendar3 me-2"></i>
+                    <span>@DateTime.Now.ToString("MMMM dd, yyyy")</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Streak Card with Fire Animation -->
+            <div class="col-12 col-lg-4">
+                <div class="dashboard-card streak-card h-100">
+                    <div class="card-icon-wrapper streak-icon">
+                        <i class="bi bi-fire"></i>
+                    </div>
+                    <h5 class="card-title mb-4">
+                        <i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Streaks
+                    </h5>
+
+                    <div class="streak-stats">
+                        <div class="streak-item">
+                            <div class="streak-label">Current Streak</div>
+                            <div class="streak-value text-primary">
+                                <span class="counter" data-target="7">0</span> days
+                                <i class="bi bi-arrow-up-circle-fill text-success ms-2 streak-indicator"></i>
+                            </div>
+                        </div>
+                        <div class="streak-item">
+                            <div class="streak-label">Longest Streak</div>
+                            <div class="streak-value">
+                                <span class="counter" data-target="21">0</span> days
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="streak-progress-wrapper mt-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <small class="text-muted">Progress to beat record</small>
+                            <small class="fw-semibold text-primary">65%</small>
+                        </div>
+                        <div class="progress streak-progress">
+                            <div class="progress-bar streak-progress-bar" style="width: 65%;"></div>
+                        </div>
+                        <small class="text-muted mt-2 d-block">Keep going! You're close to beating your longest streak.</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Today at a Glance Card -->
+            <div class="col-12 col-lg-4">
+                <div class="dashboard-card glance-card h-100">
+                    <div class="card-icon-wrapper glance-icon">
+                        <i class="bi bi-eye"></i>
+                    </div>
+                    <h5 class="card-title mb-4">
+                        <i class="bi bi-calendar-day me-2 text-info"></i>Today at a Glance
+                    </h5>
+
+                    <div class="glance-stats">
+                        <div class="glance-item">
+                            <div class="glance-icon-wrapper mood-icon">
+                                <i class="bi bi-emoji-smile"></i>
+                            </div>
+                            <div class="glance-content">
+                                <div class="glance-label">Today's Mood</div>
+                                <div class="glance-value">
+                                    <span class="badge mood-badge bg-success">Grateful</span>
+                                </div>
+                            </div>
+                        </div>
+                      
+                        <div class="glance-item">
+                            <div class="glance-icon-wrapper entries-icon">
+                                <i class="bi bi-journal-text"></i>
+                            </div>
+                            <div class="glance-content">
+                                <div class="glance-label">Entries this month</div>
+                                <div class="glance-value">
+                                    <span class="fw-bold text-primary">18</span>
+                                    <span class="text-muted"> / 30 days</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glance-item">
+                            <div class="glance-icon-wrapper tag-icon">
+                                <i class="bi bi-tag"></i>
+                            </div>
+                            <div class="glance-content">
+                                <div class="glance-label">Most used tag</div>
+                                <div class="glance-value">
+                                    <span class="badge tag-badge bg-secondary">Reflection</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions Card -->
+            <div class="col-12 col-lg-4">
+                <div class="dashboard-card actions-card h-100">
+                    <div class="card-icon-wrapper actions-icon">
+                        <i class="bi bi-lightning"></i>
+                    </div>
+                    <h5 class="card-title mb-4">
+                        <i class="bi bi-bolt-fill me-2 text-warning"></i>Quick Actions
+                    </h5>
+
+                    <div class="quick-actions">
+                        <button class="action-btn action-btn-primary w-100 mb-3" @onclick="NavigateToEntry">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            <span>Write today's entry</span>
+                            <i class="bi bi-arrow-right ms-auto"></i>
+                        </button>
+                        <button class="action-btn action-btn-secondary w-100 mb-3" @onclick="NavigateToBrowse">
+                            <i class="bi bi-calendar-week me-2"></i>
+                            <span>Open calendar</span>
+                            <i class="bi bi-arrow-right ms-auto"></i>
+                        </button>
+                        <button class="action-btn action-btn-secondary w-100" @onclick="NavigateToAnalytics">
+                            <i class="bi bi-bar-chart-line me-2"></i>
+                            <span>View analytics</span>
+                            <i class="bi bi-arrow-right ms-auto"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Entries Timeline -->
+            <div class="col-12">
+                <div class="dashboard-card entries-card">
+                    <div class="card-header-custom">
+                        <div>
+                            <h5 class="card-title mb-1">
+                                <i class="bi bi-clock-history me-2 text-primary"></i>Recent Entries
+                            </h5>
+                            <p class="text-muted small mb-0">Your latest journal entries</p>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-arrow-right me-1"></i>View all
+                        </button>
+                    </div>
+
+                    <div class="entries-list">
+                        @foreach (var (item, index) in RecentEntries.Select((item, index) => (item, index)))
+                        {
+                            <div class="entry-item fade-up" style="animation-delay: @($"{index * 0.1}s")">
+                                <div class="entry-timeline">
+                                    <div class="timeline-dot"></div>
+                                    @if (index < RecentEntries.Count - 1)
+                                    {
+                                        <div class="timeline-line"></div>
+                                    }
+                                </div>
+                                <div class="entry-content">
+                                    <div class="entry-header">
+                                        <h6 class="entry-title">@item.Title</h6>
+                                        <div class="entry-meta">
+                                            <span class="entry-date">
+                                                <i class="bi bi-calendar3 me-1"></i>
+                                                @item.Date.ToString("dddd, MMM dd")
+                                            </span>
+                                            <span class="entry-mood">
+                                                <i class="bi bi-heart-fill me-1"></i>
+                                                @item.PrimaryMood
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="entry-tags">
+                                        <span class="badge entry-category">@item.Category</span>
+                                        @foreach (var tag in item.Tags)
+                                        {
+                                            <span class="badge entry-tag">@tag</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@code {
+    [Inject] private NavigationManager? NavigationManager { get; set; }
+
+    private List<RecentEntryVm> RecentEntries { get; set; } = new()
+    {
+        new RecentEntryVm
+        {
+            Title = "Walk by the riverside",
+            Date = DateTime.Today,
+            PrimaryMood = "Relaxed",
+            Category = "Self-care",
+            Tags = new [] { "Nature", "Reflection" }
+        },
+        new RecentEntryVm
+        {
+            Title = "Productive study session",
+            Date = DateTime.Today.AddDays(-1),
+            PrimaryMood = "Confident",
+            Category = "Studies",
+            Tags = new [] { "Studies", "Planning" }
+        },
+        new RecentEntryVm
+        {
+            Title = "Dinner with family",
+            Date = DateTime.Today.AddDays(-2),
+            PrimaryMood = "Grateful",
+            Category = "Family",
+            Tags = new [] { "Family", "Celebration" }
+        }
+    };
+
+    private void NavigateToEntry()
+    {
+        NavigationManager?.NavigateTo("/entry");
+    }
+
+    private void NavigateToBrowse()
+    {
+        NavigationManager?.NavigateTo("/browse");
+    }
+
+    private void NavigateToAnalytics()
+    {
+        NavigationManager?.NavigateTo("/analytics");
+    }
+
+    private class RecentEntryVm
+    {
+        public string Title { get; set; } = "";
+        public DateTime Date { get; set; }
+        public string PrimaryMood { get; set; } = "";
+        public string Category { get; set; } = "";
+        public string[] Tags { get; set; } = Array.Empty<string>();
+    }
+}
+
+
+
+

@@ -1,0 +1,243 @@
+@page "/entry"
+
+<main class="entry-page">
+    <div class="container py-4">
+        <!-- Page Header -->
+        <div class="entry-header fade-in">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h1 class="entry-page-title">
+                        <i class="bi bi-journal-plus me-2"></i>Today's Entry
+                    </h1>
+                    <p class="text-muted mb-0">Capture your thoughts and feelings for today</p>
+                </div>
+                <div class="entry-date-badge">
+                    <i class="bi bi-calendar3 me-2"></i>
+                    <span>@DateTime.Now.ToString("MMMM dd, yyyy")</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left Sidebar: Meta Information -->
+            <div class="col-12 col-lg-4">
+                <div class="entry-sidebar">
+                    <!-- Entry Date Card -->
+                    <div class="entry-meta-card fade-up">
+                        <div class="meta-card-header">
+                            <i class="bi bi-calendar-event me-2"></i>
+                            <span>Entry Details</span>
+                        </div>
+                        <div class="meta-card-body">
+                            <div class="form-group">
+                                <label class="form-label-custom">
+                                    <i class="bi bi-calendar3 me-1"></i>Date
+                                </label>
+                                <input type="date" class="form-control-custom" value="@TodayString" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mood Selection Card -->
+                    <div class="entry-meta-card fade-up" style="animation-delay: 0.1s">
+                        <div class="meta-card-header">
+                            <i class="bi bi-heart-fill me-2"></i>
+                            <span>Moods</span>
+                        </div>
+                        <div class="meta-card-body">
+                            <div class="form-group">
+                                <label class="form-label-custom">
+                                    <i class="bi bi-star-fill me-1 text-warning"></i>Primary Mood <span class="required">*</span>
+                                </label>
+                                <select class="form-control-custom">
+                                    <option value="">Select a mood...</option>
+                                    <optgroup label="Positive">
+                                        <option value="happy" selected>Happy</option>
+                                        <option value="excited">Excited</option>
+                                        <option value="relaxed">Relaxed</option>
+                                        <option value="grateful">Grateful</option>
+                                        <option value="confident">Confident</option>
+                                    </optgroup>
+                                    <optgroup label="Neutral">
+                                        <option value="calm">Calm</option>
+                                        <option value="thoughtful">Thoughtful</option>
+                                        <option value="curious">Curious</option>
+                                        <option value="nostalgic">Nostalgic</option>
+                                        <option value="bored">Bored</option>
+                                    </optgroup>
+                                    <optgroup label="Negative">
+                                        <option value="sad">Sad</option>
+                                        <option value="angry">Angry</option>
+                                        <option value="stressed">Stressed</option>
+                                        <option value="lonely">Lonely</option>
+                                        <option value="anxious">Anxious</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label-custom">
+                                    <i class="bi bi-heart me-1"></i>Secondary Moods <span class="text-muted small">(up to 2)</span>
+                                </label>
+                                <div class="mood-chips">
+                                    <button class="mood-chip" data-mood="excited">Excited</button>
+                                    <button class="mood-chip" data-mood="curious">Curious</button>
+                                    <button class="mood-chip" data-mood="nostalgic">Nostalgic</button>
+                                    <button class="mood-chip" data-mood="relaxed">Relaxed</button>
+                                    <button class="mood-chip" data-mood="calm">Calm</button>
+                                </div>
+                                <small class="text-muted">Click to select secondary moods</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category & Tags Card -->
+                    <div class="entry-meta-card fade-up" style="animation-delay: 0.2s">
+                        <div class="meta-card-header">
+                            <i class="bi bi-tags-fill me-2"></i>
+                            <span>Organization</span>
+                        </div>
+                        <div class="meta-card-body">
+                            <div class="form-group">
+                                <label class="form-label-custom">
+                                    <i class="bi bi-folder-fill me-1"></i>Category
+                                </label>
+                                <select class="form-control-custom">
+                                    <option value="">Select category...</option>
+                                    <option value="personal-growth" selected>Personal Growth</option>
+                                    <option value="work">Work</option>
+                                    <option value="studies">Studies</option>
+                                    <option value="health">Health</option>
+                                    <option value="family">Family</option>
+                                    <option value="travel">Travel</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label-custom">
+                                    <i class="bi bi-tag-fill me-1"></i>Tags
+                                </label>
+                                <input type="text" class="form-control-custom" placeholder="Type and press Enter..." />
+                                <div class="tags-container mt-2">
+                                    <span class="tag-item">Reflection</span>
+                                    <span class="tag-item">Work</span>
+                                    <span class="tag-item">Health</span>
+                                </div>
+                                <small class="text-muted">Suggested: Work, Health, Travel, Fitness, Family</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="entry-actions fade-up" style="animation-delay: 0.3s">
+                        <button class="action-btn action-btn-danger">
+                            <i class="bi bi-trash me-2"></i>Delete
+                        </button>
+                        <div class="d-flex gap-2">
+                            <button class="action-btn action-btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Discard
+                            </button>
+                            <button class="action-btn action-btn-primary">
+                                <i class="bi bi-save2 me-2"></i>Save Entry
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Editor -->
+            <div class="col-12 col-lg-8">
+                <div class="entry-editor-card fade-up" style="animation-delay: 0.1s">
+                    <div class="editor-header">
+                        <div class="editor-title-wrapper">
+                            <input type="text" 
+                                   class="editor-title-input" 
+                                   placeholder="Give your entry a title..." 
+                                   value="Today's Reflection" />
+                        </div>
+                        <div class="editor-mode-toggle">
+                            <button class="mode-btn active" data-mode="markdown">
+                                <i class="bi bi-code-slash me-1"></i>Markdown
+                            </button>
+                            <button class="mode-btn" data-mode="preview">
+                                <i class="bi bi-eye me-1"></i>Preview
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Toolbar -->
+                    <div class="editor-toolbar">
+                        <div class="toolbar-group">
+                            <button class="toolbar-btn" title="Bold">
+                                <i class="bi bi-type-bold"></i>
+                            </button>
+                            <button class="toolbar-btn" title="Italic">
+                                <i class="bi bi-type-italic"></i>
+                            </button>
+                            <button class="toolbar-btn" title="Strikethrough">
+                                <i class="bi bi-type-strikethrough"></i>
+                            </button>
+                        </div>
+                        <div class="toolbar-divider"></div>
+                        <div class="toolbar-group">
+                            <button class="toolbar-btn" title="Unordered List">
+                                <i class="bi bi-list-ul"></i>
+                            </button>
+                            <button class="toolbar-btn" title="Ordered List">
+                                <i class="bi bi-list-ol"></i>
+                            </button>
+                            <button class="toolbar-btn" title="Quote">
+                                <i class="bi bi-quote"></i>
+                            </button>
+                        </div>
+                        <div class="toolbar-divider"></div>
+                        <div class="toolbar-group">
+                            <button class="toolbar-btn" title="Link">
+                                <i class="bi bi-link-45deg"></i>
+                            </button>
+                            <button class="toolbar-btn" title="Image">
+                                <i class="bi bi-image"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Editor Content -->
+                    <div class="editor-content">
+                        <textarea class="editor-textarea"
+                                  placeholder="Start writing about your day..."></textarea>
+                    </div>
+
+                    <!-- Editor Footer -->
+                    <div class="editor-footer">
+                        <div class="editor-stats">
+                            <span class="stat-item">
+                                <i class="bi bi-file-text me-1"></i>
+                                <span id="wordCount">0</span> words
+                            </span>
+                            <span class="stat-item">
+                                <i class="bi bi-clock me-1"></i>
+                                Created: @DateTime.Today.ToString("MMM dd, yyyy")
+                            </span>
+                            <span class="stat-item">
+                                <i class="bi bi-pencil me-1"></i>
+                                Last updated: just now
+                            </span>
+                        </div>
+                        <div class="editor-auto-save">
+                            <i class="bi bi-check-circle-fill text-success me-1"></i>
+                            <span>Auto-saved</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@code {
+    private string TodayString => DateTime.Today.ToString("yyyy-MM-dd");
+}
+
+
+
+
