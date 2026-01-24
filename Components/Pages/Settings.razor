@@ -1,0 +1,303 @@
+@page "/settings"
+@using Mero_Dainiki.Services
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-6 fw-bold">
+                <i class="bi bi-gear me-2"></i>Settings
+            </h1>
+            <p class="text-muted">Customize your app preferences</p>
+        </div>
+    </div>
+
+    <!-- Settings Message -->
+    @if (!string.IsNullOrEmpty(SettingsMessage))
+    {
+        <div class="alert alert-@(IsSettingsSuccess ? "success" : "danger") alert-dismissible fade show" role="alert">
+            <i class="bi bi-@(IsSettingsSuccess ? "check-circle" : "exclamation-circle") me-2"></i>
+            @SettingsMessage
+            <button type="button" class="btn-close" @onclick="() => SettingsMessage = string.Empty"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Appearance Settings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-palette me-2"></i>Appearance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <strong>Dark Mode</strong>
+                            <p class="text-muted mb-0 small">Switch between light and dark theme</p>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" 
+                                   id="darkModeSwitch" 
+                                   checked="@IsDarkMode"
+                                   @onchange="ToggleDarkMode"
+                                   style="width: 3rem; height: 1.5rem;">
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Font Size</strong>
+                            <p class="text-muted mb-0 small">Adjust text size for readability</p>
+                        </div>
+                        <select class="form-select" style="width: auto;" value="@FontSize" @onchange="ChangeFontSize">
+                            <option>Small</option>
+                            <option>Medium</option>
+                            <option>Large</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Settings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-bell me-2"></i>Notifications</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <strong>Daily Reminder</strong>
+                            <p class="text-muted mb-0 small">Get reminded to write your journal</p>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" checked="@DailyReminderEnabled" @onchange="ToggleDailyReminder" style="width: 3rem; height: 1.5rem;">
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Reminder Time</strong>
+                            <p class="text-muted mb-0 small">When to send daily reminder</p>
+                        </div>
+                        <input type="time" class="form-control" value="@ReminderTime" @onchange="ChangeReminderTime" style="width: auto;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Privacy Settings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-shield-lock me-2"></i>Security</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <strong>PIN Protection</strong>
+                            <p class="text-muted mb-0 small">Protect your journal with a PIN</p>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" checked="@PinEnabled" @onchange="TogglePinProtection" style="width: 3rem; height: 1.5rem;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Management -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-database me-2"></i>Data Management</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <strong>Export Data</strong>
+                            <p class="text-muted mb-0 small">Download all your journal entries</p>
+                        </div>
+                        <button class="btn btn-outline-primary" @onclick="ExportData">
+                            <i class="bi bi-download me-1"></i>Export
+                        </button>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Delete All Data</strong>
+                            <p class="text-muted mb-0 small">Permanently remove all entries</p>
+                        </div>
+                        <button class="btn btn-outline-danger" @onclick="DeleteAllData">
+                            <i class="bi bi-trash me-1"></i>Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-person-circle display-1 text-primary"></i>
+                    </div>
+                    <h5>User Profile</h5>
+                    <p class="text-muted">user@example.com</p>
+                    <button class="btn btn-outline-primary w-100 mb-2">Edit Profile</button>
+                    <button class="btn btn-outline-danger w-100">Sign Out</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Inject]
+    private IThemeService ThemeService { get; set; } = default!;
+    
+    [Inject]
+    private ISecurityService SecurityService { get; set; } = default!;
+    
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
+
+    private bool IsDarkMode { get; set; } = false;
+    private string FontSize { get; set; } = "Medium";
+    private bool DailyReminderEnabled { get; set; } = true;
+    private string ReminderTime { get; set; } = "20:00";
+    private bool PinEnabled { get; set; } = false;
+    private string SettingsMessage { get; set; } = string.Empty;
+    private bool IsSettingsSuccess { get; set; } = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var savedTheme = await ThemeService.GetThemeAsync();
+            IsDarkMode = savedTheme == "dark";
+            
+            // Load other settings from localStorage
+            FontSize = await JS.InvokeAsync<string>("localStorage.getItem", "fontSize") ?? "Medium";
+            DailyReminderEnabled = await JS.InvokeAsync<bool>("eval", "JSON.parse(localStorage.getItem('dailyReminder') ?? 'true')");
+            ReminderTime = await JS.InvokeAsync<string>("localStorage.getItem", "reminderTime") ?? "20:00";
+            PinEnabled = await JS.InvokeAsync<bool>("eval", "JSON.parse(localStorage.getItem('pinEnabled') ?? 'false')");
+            
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleDarkMode(ChangeEventArgs e)
+    {
+        IsDarkMode = (bool)(e.Value ?? false);
+        var theme = IsDarkMode ? "dark" : "light";
+        await ThemeService.SaveThemeAsync(theme);
+        await JS.InvokeVoidAsync("themeManager.setTheme", theme);
+        ShowSettingsMessage("Theme updated successfully", true);
+    }
+
+    private async Task ChangeFontSize(ChangeEventArgs e)
+    {
+        FontSize = e.Value?.ToString() ?? "Medium";
+        await JS.InvokeVoidAsync("localStorage.setItem", "fontSize", FontSize);
+        
+        // Apply font size using the applyFontSize function
+        await JS.InvokeVoidAsync("applyFontSize", FontSize);
+        ShowSettingsMessage($"Font size changed to {FontSize}", true);
+    }
+
+    private async Task ToggleDailyReminder(ChangeEventArgs e)
+    {
+        DailyReminderEnabled = (bool)(e.Value ?? false);
+        await JS.InvokeVoidAsync("localStorage.setItem", "dailyReminder", DailyReminderEnabled.ToString().ToLower());
+        ShowSettingsMessage(DailyReminderEnabled ? "Daily reminder enabled" : "Daily reminder disabled", true);
+    }
+
+    private async Task ChangeReminderTime(ChangeEventArgs e)
+    {
+        ReminderTime = e.Value?.ToString() ?? "20:00";
+        await JS.InvokeVoidAsync("localStorage.setItem", "reminderTime", ReminderTime);
+        ShowSettingsMessage($"Reminder time set to {ReminderTime}", true);
+    }
+
+    private async Task TogglePinProtection(ChangeEventArgs e)
+    {
+        PinEnabled = (bool)(e.Value ?? false);
+        
+        if (PinEnabled)
+        {
+            // Show PIN setup modal
+            var pin = await JS.InvokeAsync<string>("prompt", "Enter a 4+ digit PIN:");
+            if (!string.IsNullOrEmpty(pin) && pin.Length >= 4)
+            {
+                var confirmPin = await JS.InvokeAsync<string>("prompt", "Confirm your PIN:");
+                if (pin == confirmPin)
+                {
+                    var result = await SecurityService.SetPinAsync(pin);
+                    if (result.Success)
+                    {
+                        await JS.InvokeVoidAsync("localStorage.setItem", "pinEnabled", "true");
+                        await JS.InvokeVoidAsync("localStorage.setItem", "userPin", pin);
+                        ShowSettingsMessage("PIN protection enabled successfully", true);
+                    }
+                    else
+                    {
+                        ShowSettingsMessage(result.ErrorMessage ?? "Failed to set PIN", false);
+                        PinEnabled = false;
+                    }
+                }
+                else
+                {
+                    ShowSettingsMessage("PINs do not match", false);
+                    PinEnabled = false;
+                }
+            }
+            else
+            {
+                ShowSettingsMessage("PIN must be at least 4 digits", false);
+                PinEnabled = false;
+            }
+        }
+        else
+        {
+            var confirmed = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to disable PIN protection?");
+            if (confirmed)
+            {
+                var result = await SecurityService.RemovePinAsync("");
+                await JS.InvokeVoidAsync("localStorage.setItem", "pinEnabled", "false");
+                await JS.InvokeVoidAsync("localStorage.removeItem", "userPin");
+                ShowSettingsMessage("PIN protection disabled", true);
+            }
+            else
+            {
+                PinEnabled = true;
+            }
+        }
+        
+        StateHasChanged();
+    }
+
+    private void ShowSettingsMessage(string message, bool success)
+    {
+        SettingsMessage = message;
+        IsSettingsSuccess = success;
+        StateHasChanged();
+        
+        // Auto-hide message after 3 seconds
+        Task.Delay(3000).ContinueWith(_ =>
+        {
+            SettingsMessage = string.Empty;
+            StateHasChanged();
+        });
+    }
+
+    private async Task ExportData()
+    {
+        await JS.InvokeVoidAsync("alert", "Export functionality coming soon!");
+    }
+
+    private async Task DeleteAllData()
+    {
+        var confirm = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete all data? This cannot be undone.");
+        if (confirm)
+        {
+            // Clear localStorage
+            await JS.InvokeVoidAsync("localStorage.clear");
+            await JS.InvokeVoidAsync("alert", "All data has been deleted!");
+        }
+    }
+}

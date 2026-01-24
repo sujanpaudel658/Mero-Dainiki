@@ -1,5 +1,9 @@
 @page "/login"
+@using Mero_Dainiki.Services
+@using Mero_Dainiki.Models
 @using Microsoft.AspNetCore.Components.Web
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
 
 <main class="login-page-root">
     <div class="login-container">
@@ -15,63 +19,42 @@
 
             <!-- Login Form -->
             <div class="login-form fade-up">
-                <!-- Toggle between Password and PIN -->
-                <div class="btn-group w-100 mb-4" role="group">
-                    <input type="radio" class="btn-check" name="authType" id="authPassword" checked='@(AuthType == "password")' @onchange='@(() => AuthType = "password")' />
-
-                    <label class="btn btn-outline-primary" for="authPassword">
-                        <i class="bi bi-key-fill me-2"></i>Password
-                    </label>
-                    <input type="radio" class="btn-check" name="authType" id="authPIN" checked='@(AuthType == "pin")' @onchange='@(() => AuthType = "pin")' />
-                    <label class="btn btn-outline-primary" for="authPIN">
-                        <i class="bi bi-shield-lock-fill me-2"></i>PIN
-                    </label>
+                <!-- Username/Email Input -->
+                <div class="mb-3">
+                    <label for="username" class="form-label fw-semibold">Username or Email</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light">
+                            <i class="bi bi-person-fill"></i>
+                        </span>
+                        <input type="text" 
+                               class="form-control form-control-lg" 
+                               id="username" 
+                               placeholder="Enter your username or email"
+                               @bind="Username"
+                               @onkeypress="HandleKeyPress" />
+                    </div>
                 </div>
 
-                @if (AuthType == "password")
-                {
-                    <!-- Password Input -->
-                    <div class="mb-3">
-                        <label for="password" class="form-label fw-semibold">Password</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light">
-                                <i class="bi bi-lock-fill"></i>
-                            </span>
-                            <input type='@(ShowPassword ? "text" : "password")' 
-                                   class="form-control form-control-lg" 
-                                   id="password" 
-                                   placeholder="Enter your password"
-                                   @bind="Password"
-                                   @onkeypress="HandleKeyPress" />
-                            <button class="btn btn-outline-secondary" type="button" @onclick="TogglePasswordVisibility">
-                                <i class='bi bi-eye@(ShowPassword ? "-slash" : "")-fill'></i>
-                            </button>
-                        </div>
+                <!-- Password Input -->
+                <div class="mb-3">
+                    <label for="password" class="form-label fw-semibold">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light">
+                            <i class="bi bi-lock-fill"></i>
+                        </span>
+                        <input type='@(ShowPassword ? "text" : "password")' 
+                               class="form-control form-control-lg" 
+                               id="password" 
+                               placeholder="Enter your password"
+                               @bind="Password"
+                               @onkeypress="HandleKeyPress" />
+                        <button class="btn btn-outline-secondary" type="button" @onclick="TogglePasswordVisibility">
+                            <i class='bi bi-eye@(ShowPassword ? "-slash" : "")-fill'></i>
+                        </button>
                     </div>
-                }
-                else
-                {
-                    <!-- PIN Input -->
-                    <div class="mb-3">
-                        <label for="pin" class="form-label fw-semibold">PIN</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light">
-                                <i class="bi bi-shield-lock-fill"></i>
-                            </span>
-                            <input type="password" 
-                                   class="form-control form-control-lg text-center" 
-                                   id="pin" 
-                                   placeholder="Enter 4-6 digit PIN"
-                                   maxlength="6"
-                                   @bind="PIN"
-                                   @onkeypress="HandleKeyPress"
-                                   style="font-size: 1.5rem; letter-spacing: 0.5rem;" />
-                        </div>
-                        <small class="text-muted">Enter 4-6 digits</small>
-                    </div>
-                }
+                </div>
 
-                <!-- Remember Me / Forgot Password -->
+                <!-- Remember Me -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="rememberMe" @bind="RememberMe" />
@@ -79,9 +62,6 @@
                             Remember me
                         </label>
                     </div>
-                    <a href="#" class="text-decoration-none small" @onclick="HandleForgotPassword" @onclick:preventDefault>
-                        Forgot @(AuthType == "password" ? "password" : "PIN")?
-                    </a>
                 </div>
 
                 <!-- Error Message -->
@@ -109,10 +89,10 @@
                     }
                 </button>
 
-                <!-- First Time Setup Link -->
+                <!-- Sign Up Link -->
                 <div class="text-center">
                     <small class="text-muted">
-                        First time? <a href="#" class="text-decoration-none" @onclick="HandleFirstTimeSetup" @onclick:preventDefault>Set up your account</a>
+                        Don't have an account? <a href="/register" class="text-decoration-none">Sign up here</a>
                     </small>
                 </div>
             </div>
@@ -129,9 +109,11 @@
 </main>
 
 @code {
-    private string AuthType { get; set; } = "password";
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
+
+    private string Username { get; set; } = string.Empty;
     private string Password { get; set; } = string.Empty;
-    private string PIN { get; set; } = string.Empty;
     private bool ShowPassword { get; set; } = false;
     private bool RememberMe { get; set; } = false;
     private bool IsLoading { get; set; } = false;
@@ -154,51 +136,55 @@
     {
         ErrorMessage = null;
 
-        if (AuthType == "password")
+        if (string.IsNullOrWhiteSpace(Username))
         {
-            if (string.IsNullOrWhiteSpace(Password))
-            {
-                ErrorMessage = "Please enter your password";
-                return;
-            }
+            ErrorMessage = "Please enter your username";
+            return;
         }
-        else
+
+        if (string.IsNullOrWhiteSpace(Password))
         {
-            if (string.IsNullOrWhiteSpace(PIN) || PIN.Length < 4)
-            {
-                ErrorMessage = "Please enter a valid PIN (4-6 digits)";
-                return;
-            }
+            ErrorMessage = "Please enter your password";
+            return;
         }
 
         IsLoading = true;
         
-        // Simulate authentication delay
-        await Task.Delay(800);
+        try
+        {
+            var result = await AuthService.LoginAsync(new UserAuthModel 
+            { 
+                Username = Username, 
+                Password = Password 
+            });
 
-        // TODO: Implement actual authentication logic here
-        // For now, this is just a UI mockup
-        Console.WriteLine($"Login attempt with {AuthType}: {(AuthType == "password" ? "***" : PIN)}");
-        
-        // Simulate success (in real app, validate against stored credentials)
-        // NavigationManager.NavigateTo("/dashboard");
-        
-        IsLoading = false;
-        
-        // For demo purposes, show success message
-        // In production, redirect to dashboard or home
-    }
-
-    private void HandleForgotPassword()
-    {
-        // TODO: Implement forgot password/PIN flow
-        Console.WriteLine($"Forgot {AuthType} clicked");
-    }
-
-    private void HandleFirstTimeSetup()
-    {
-        // TODO: Navigate to setup page
-        Console.WriteLine("First time setup clicked");
+            if (result.Success)
+            {
+                // Save authentication token and user ID
+                await JS.InvokeVoidAsync("localStorage.setItem", "authToken", result.Data!.Id.ToString());
+                await JS.InvokeVoidAsync("localStorage.setItem", "userId", result.Data!.Id.ToString());
+                await JS.InvokeVoidAsync("localStorage.setItem", "username", result.Data!.Username);
+                
+                if (RememberMe)
+                {
+                    await JS.InvokeVoidAsync("localStorage.setItem", "rememberMe", "true");
+                    await JS.InvokeVoidAsync("localStorage.setItem", "lastUsername", Username);
+                }
+                Navigation.NavigateTo("/dashboard");
+            }
+            else
+            {
+                ErrorMessage = result.ErrorMessage ?? "Login failed";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 }
 

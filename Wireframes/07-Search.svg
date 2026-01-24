@@ -1,0 +1,88 @@
+<svg viewBox="0 0 375 667" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sketch style definitions -->
+  <defs>
+    <filter id="rough">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" />
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="375" height="667" fill="#fafafa" stroke="#333" stroke-width="2" filter="url(#rough)"/>
+  
+  <!-- Header -->
+  <rect width="375" height="60" fill="#fff" stroke="#ddd" stroke-width="1" filter="url(#rough)"/>
+  <text x="20" y="42" font-size="20" font-weight="bold" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+    ← Search
+  </text>
+  
+  <!-- Search bar -->
+  <rect x="20" y="85" width="335" height="45" fill="none" stroke="#333" stroke-width="2" rx="8" filter="url(#rough)"/>
+  <text x="30" y="110" font-size="14" fill="#999" font-family="Arial, sans-serif" filter="url(#rough)">
+    🔍 Search entries...
+  </text>
+  
+  <!-- Filter options -->
+  <text x="20" y="155" font-size="12" font-weight="bold" fill="#666" font-family="Arial, sans-serif" filter="url(#rough)">
+    Filter by:
+  </text>
+  
+  <!-- Mood filter -->
+  <rect x="20" y="170" width="160" height="35" fill="none" stroke="#ddd" stroke-width="1" rx="4" filter="url(#rough)"/>
+  <text x="30" y="193" font-size="11" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+    😊 😐 😢 😴 😤
+  </text>
+  
+  <!-- Date range filter -->
+  <rect x="195" y="170" width="160" height="35" fill="none" stroke="#ddd" stroke-width="1" rx="4" filter="url(#rough)"/>
+  <text x="205" y="193" font-size="11" fill="#666" font-family="Arial, sans-serif" filter="url(#rough)">
+    📅 Date Range
+  </text>
+  
+  <!-- Tag filter -->
+  <rect x="20" y="220" width="335" height="35" fill="none" stroke="#ddd" stroke-width="1" rx="4" filter="url(#rough)"/>
+  <text x="30" y="243" font-size="11" fill="#666" font-family="Arial, sans-serif" filter="url(#rough)">
+    🏷️ Add tags...
+  </text>
+  
+  <!-- Search results -->
+  <text x="20" y="290" font-size="13" font-weight="bold" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+    Search Results (3)
+  </text>
+  
+  <!-- Result 1 -->
+  <rect x="20" y="310" width="335" height="65" fill="none" stroke="#333" stroke-width="2" rx="6" filter="url(#rough)"/>
+  <text x="30" y="332" font-size="13" font-weight="bold" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+    Amazing day at work
+  </text>
+  <text x="30" y="352" font-size="10" fill="#999" font-family="Arial, sans-serif" filter="url(#rough)">
+    January 24 • 😊 • #work #productive
+  </text>
+  <text x="30" y="368" font-size="9" fill="#666" font-family="Arial, sans-serif" filter="url(#rough)">
+    Today was incredibly productive. Completed the dashboard feature...
+  </text>
+  
+  <!-- Result 2 -->
+  <rect x="20" y="395" width="335" height="65" fill="none" stroke="#333" stroke-width="2" rx="6" filter="url(#rough)"/>
+  <text x="30" y="417" font-size="13" font-weight="bold" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+    Productive morning
+  </text>
+  <text x="30" y="437" font-size="10" fill="#999" font-family="Arial, sans-serif" filter="url(#rough)">
+    January 23 • 😊 • #morning #productive
+  </text>
+  <text x="30" y="453" font-size="9" fill="#666" font-family="Arial, sans-serif" filter="url(#rough)">
+    Woke up early and got so much done before noon...
+  </text>
+  
+  <!-- Result 3 -->
+  <rect x="20" y="480" width="335" height="65" fill="none" stroke="#333" stroke-width="2" rx="6" filter="url(#rough)"/>
+  <text x="30" y="502" font-size="13" font-weight="bold" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+    Work challenges and learning
+  </text>
+  <text x="30" y="522" font-size="10" fill="#999" font-family="Arial, sans-serif" filter="url(#rough)">
+    January 20 • 😐 • #work #learning
+  </text>
+  <text x="30" y="538" font-size="9" fill="#666" font-family="Arial, sans-serif" filter="url(#rough)">
+    Faced some interesting challenges today that taught me...
+  </text>
+</svg>

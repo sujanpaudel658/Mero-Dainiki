@@ -1,21 +1,24 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using Mero_Dainiki.Services
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="/">Mero-Dainiki</a>
+        <button class="btn btn-outline-primary ms-2" @onclick="ToggleTheme" title="Toggle theme">
+            <span class="bi @(IsDarkTheme ? "bi-moon-stars-fill" : "bi-sun-fill")" style="font-size: 1.2rem;"></span>
+        </button>
     </div>
 </div>
 
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
-<div class="nav-scrollable" 
-     onclick="document.querySelector('.navbar-toggler').click()">
-
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
                 <span class="bi bi-house-door-fill" aria-hidden="true"></span>
-                home
+                Home
             </NavLink>
-        </div> 
+        </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="/dashboard">
@@ -25,9 +28,9 @@
         </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/entry">
+            <NavLink class="nav-link" href="/journal">
                 <span class="bi bi-journal-plus" aria-hidden="true"></span>
-                Today&#39;s Entry
+                Today's Entry
             </NavLink>
         </div>
 
@@ -39,18 +42,123 @@
         </div>
 
         <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/calendar">
+                <span class="bi bi-calendar3" aria-hidden="true"></span>
+                Calendar
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
             <NavLink class="nav-link" href="/analytics">
                 <span class="bi bi-graph-up" aria-hidden="true"></span>
                 Analytics
             </NavLink>
         </div>
 
-        <div class="nav-item px-3 mt-auto">
-            <NavLink class="nav-link" href="/login">
-                <span class="bi bi-box-arrow-in-right" aria-hidden="true"></span>
-                Login
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/export">
+                <span class="bi bi-download" aria-hidden="true"></span>
+                Export
             </NavLink>
         </div>
-    </nav>
 
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/security">
+                <span class="bi bi-shield-lock" aria-hidden="true"></span>
+                Security
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/settings">
+                <span class="bi bi-gear" aria-hidden="true"></span>
+                Settings
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3 mt-auto">
+            @if (IsAuthenticated)
+            {
+                <div class="nav-link d-flex justify-content-between align-items-center">
+                    <span class="bi bi-person-fill me-2"></span>
+                    <span>@Username</span>
+                </div>
+                <button class="btn btn-outline-danger btn-sm w-100 mt-2" @onclick="HandleLogout">
+                    <span class="bi bi-box-arrow-right me-2"></span>
+                    Sign Out
+                </button>
+            }
+            else
+            {
+                <NavLink class="nav-link" href="/login">
+                    <span class="bi bi-box-arrow-in-right" aria-hidden="true"></span>
+                    Sign In
+                </NavLink>
+            }
+        </div>
+    </nav>
 </div>
+
+@code {
+    private bool IsDarkTheme { get; set; } = false;
+    private bool IsAuthenticated { get; set; } = false;
+    private string Username { get; set; } = string.Empty;
+
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
+
+    [Inject]
+    private IThemeService ThemeService { get; set; } = default!;
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Check authentication
+            var authToken = await JS.InvokeAsync<string>("localStorage.getItem", "authToken");
+            var username = await JS.InvokeAsync<string>("localStorage.getItem", "username");
+            
+            IsAuthenticated = !string.IsNullOrEmpty(authToken);
+            Username = username ?? "User";
+            
+            try
+            {
+                var savedTheme = await ThemeService.GetThemeAsync();
+                IsDarkTheme = savedTheme == "dark";
+                await JS.InvokeVoidAsync("themeManager.setTheme", savedTheme);
+                StateHasChanged();
+            }
+            catch
+            {
+                IsDarkTheme = false;
+                await JS.InvokeVoidAsync("themeManager.setTheme", "light");
+            }
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        IsDarkTheme = !IsDarkTheme;
+        var themeClass = IsDarkTheme ? "dark" : "light";
+        await ThemeService.SaveThemeAsync(themeClass);
+        await JS.InvokeVoidAsync("themeManager.setTheme", themeClass);
+        StateHasChanged();
+    }
+
+    private async Task HandleLogout()
+    {
+        // Clear authentication data
+        await JS.InvokeVoidAsync("localStorage.removeItem", "authToken");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "userId");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "username");
+        
+        IsAuthenticated = false;
+        Username = string.Empty;
+        
+        StateHasChanged();
+        Navigation.NavigateTo("/login");
+    }
+}

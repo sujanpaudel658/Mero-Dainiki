@@ -1,0 +1,144 @@
+<svg viewBox="0 0 375 667" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sketch style definitions -->
+  <defs>
+    <filter id="rough">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" />
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="375" height="667" fill="#fafafa" stroke="#333" stroke-width="2" filter="url(#rough)"/>
+  
+  <!-- Header -->
+  <rect width="375" height="60" fill="#fff" stroke="#ddd" stroke-width="1" filter="url(#rough)"/>
+  <text x="20" y="42" font-size="20" font-weight="bold" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+    ← Calendar
+  </text>
+  
+  <!-- Month selector -->
+  <text x="187" y="100" font-size="16" font-weight="bold" text-anchor="middle" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+    January 2025
+  </text>
+  <text x="20" y="100" font-size="18" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+    ‹
+  </text>
+  <text x="355" y="100" font-size="18" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+    ›
+  </text>
+  
+  <!-- Day labels -->
+  <g font-size="11" font-weight="bold" fill="#666" font-family="Arial, sans-serif" filter="url(#rough)">
+    <text x="30" y="135">Sun</text>
+    <text x="84" y="135">Mon</text>
+    <text x="137" y="135">Tue</text>
+    <text x="187" y="135">Wed</text>
+    <text x="237" y="135">Thu</text>
+    <text x="287" y="135">Fri</text>
+    <text x="337" y="135">Sat</text>
+  </g>
+  
+  <!-- Calendar grid -->
+  <g stroke="#ddd" stroke-width="1">
+    <!-- Week 1 -->
+    <rect x="20" y="150" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="73" y="150" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="126" y="150" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="179" y="150" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="232" y="150" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="285" y="150" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="338" y="150" width="35" height="45" fill="none" filter="url(#rough)"/>
+    
+    <!-- Week 2 -->
+    <rect x="20" y="200" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="73" y="200" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="126" y="200" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="179" y="200" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="232" y="200" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="285" y="200" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="338" y="200" width="35" height="45" fill="none" filter="url(#rough)"/>
+    
+    <!-- Week 3 -->
+    <rect x="20" y="250" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="73" y="250" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="126" y="250" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="179" y="250" width="45" height="45" fill="#e8f5e9" stroke="#333" stroke-width="2" filter="url(#rough)"/>
+    <rect x="232" y="250" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="285" y="250" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="338" y="250" width="35" height="45" fill="none" filter="url(#rough)"/>
+    
+    <!-- Week 4 -->
+    <rect x="20" y="300" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="73" y="300" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="126" y="300" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="179" y="300" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="232" y="300" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="285" y="300" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="338" y="300" width="35" height="45" fill="none" filter="url(#rough)"/>
+    
+    <!-- Week 5 -->
+    <rect x="20" y="350" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="73" y="350" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="126" y="350" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="179" y="350" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="232" y="350" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="285" y="350" width="45" height="45" fill="none" filter="url(#rough)"/>
+    <rect x="338" y="350" width="35" height="45" fill="none" filter="url(#rough)"/>
+  </g>
+  
+  <!-- Date numbers -->
+  <g font-size="13" font-weight="bold" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+    <text x="30" y="182">1</text>
+    <text x="84" y="182">2</text>
+    <text x="137" y="182">3</text>
+    <text x="192" y="182">4</text>
+    <text x="242" y="182">5</text>
+    <text x="295" y="182">6</text>
+    <text x="348" y="182">7</text>
+    
+    <text x="30" y="232">8</text>
+    <text x="84" y="232">9</text>
+    <text x="137" y="232">10</text>
+    <text x="192" y="232">11</text>
+    <text x="242" y="232">12</text>
+    <text x="295" y="232">13</text>
+    <text x="348" y="232">14</text>
+    
+    <text x="30" y="282">15</text>
+    <text x="84" y="282">16</text>
+    <text x="137" y="282">17</text>
+    <text x="192" y="282">18</text>
+    <text x="242" y="282">19</text>
+    <text x="295" y="282">20</text>
+    <text x="348" y="282">21</text>
+    
+    <text x="30" y="332">22</text>
+    <text x="84" y="332">23</text>
+    <text x="137" y="332">24</text>
+    <text x="192" y="332">25</text>
+    <text x="242" y="332">26</text>
+    <text x="295" y="332">27</text>
+    <text x="348" y="332">28</text>
+    
+    <text x="30" y="382">29</text>
+    <text x="84" y="382">30</text>
+    <text x="137" y="382">31</text>
+  </g>
+  
+  <!-- Selected day indicator -->
+  <text x="201" y="282" font-size="18" fill="#4caf50" font-family="Arial, sans-serif" filter="url(#rough)">
+    ✓
+  </text>
+  
+  <!-- Selected entry info -->
+  <rect x="20" y="420" width="335" height="90" fill="none" stroke="#333" stroke-width="2" rx="6" filter="url(#rough)"/>
+  <text x="30" y="445" font-size="12" fill="#666" font-family="Arial, sans-serif" filter="url(#rough)">
+    January 24, 2025
+  </text>
+  <text x="30" y="468" font-size="13" font-weight="bold" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+    Amazing day at work
+  </text>
+  <text x="30" y="490" font-size="10" fill="#999" font-family="Arial, sans-serif" filter="url(#rough)">
+    😊 Happy • 3 tags
+  </text>
+</svg>

@@ -3,7 +3,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: white;
     position: relative;
     overflow: hidden;
     padding: 2rem 1rem;
@@ -191,5 +191,39 @@
         height: 70px;
         font-size: 1.75rem;
     }
+}
+
+/* ==========================================
+   DARK MODE STYLES
+   ========================================== */
+:global(html.dark) .login-page-root {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+:global(html.dark) .login-card {
+    background: rgba(26, 26, 26, 0.95);
+    border-color: rgba(64, 64, 64, 0.5);
+}
+
+:global(html.dark) .login-card h4,
+:global(html.dark) .login-card h5,
+:global(html.dark) .login-card label {
+    color: #f5f5f5;
+}
+
+:global(html.dark) .login-card .text-muted {
+    color: #a3a3a3 !important;
+}
+
+:global(html.dark) .login-card .form-control {
+    background: rgba(38, 38, 38, 0.95);
+    border-color: rgba(64, 64, 64, 0.5);
+    color: #f5f5f5;
+}
+
+:global(html.dark) .login-card .btn-outline-secondary {
+    background: rgba(38, 38, 38, 0.95);
+    border-color: rgba(64, 64, 64, 0.5);
+    color: #f5f5f5;
 }
 

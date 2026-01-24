@@ -1,0 +1,143 @@
+@page "/calendar"
+@inject IJournalService JournalService
+@inject NavigationManager NavigationManager
+
+<div class="calendar-modern-container">
+    <div class="calendar-header-modern">
+        <div class="calendar-title">
+            <h1><i class="bi bi-calendar3 me-2"></i>Journal Calendar</h1>
+            <p>Click dates to view or create entries</p>
+        </div>
+        <div class="calendar-nav-buttons">
+            <button class="btn-calendar-nav" @onclick="PreviousMonth" title="Previous month">
+                ← Previous
+            </button>
+            <h2 class="month-year">@CurrentDate.ToString("MMMM yyyy")</h2>
+            <button class="btn-calendar-nav" @onclick="NextMonth" title="Next month">
+                Next →
+            </button>
+        </div>
+    </div>
+
+    <div class="calendar-grid-modern">
+        <div class="day-header">Sun</div>
+        <div class="day-header">Mon</div>
+        <div class="day-header">Tue</div>
+        <div class="day-header">Wed</div>
+        <div class="day-header">Thu</div>
+        <div class="day-header">Fri</div>
+        <div class="day-header">Sat</div>
+
+        @{
+            var firstDay = new DateTime(CurrentDate.Year, CurrentDate.Month, 1);
+            var startDay = (int)firstDay.DayOfWeek;
+            var daysInMonth = DateTime.DaysInMonth(CurrentDate.Year, CurrentDate.Month);
+
+            for (int i = 0; i < startDay; i++)
+            {
+                <div class="calendar-day-empty"></div>
+            }
+
+            for (int day = 1; day <= daysInMonth; day++)
+            {
+                var date = new DateTime(CurrentDate.Year, CurrentDate.Month, day);
+                var hasEntry = EntryDates.Contains(date.Date);
+                var isToday = date.Date == DateTime.Today;
+                var isFuture = date.Date > DateTime.Today;
+
+                <div class="calendar-day @(hasEntry ? "has-entry" : "") @(isToday ? "is-today" : "") @(isFuture ? "is-future" : "")"
+                     @onclick="() => GoToEntry(date)">
+                    <span class="day-number">@day</span>
+                    @if (hasEntry)
+                    {
+                        <span class="entry-badge">✓</span>
+                    }
+                </div>
+            }
+        }
+    </div>
+
+    <div class="calendar-stats-modern">
+        <div class="stat-box">
+            <div class="stat-icon"><i class="bi bi-journal-text text-primary"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Total Entries</span>
+                <span class="stat-value">@TotalEntries</span>
+            </div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-icon"><i class="bi bi-fire text-warning"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Current Streak</span>
+                <span class="stat-value">@CurrentStreak days</span>
+            </div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-icon"><i class="bi bi-star-fill text-warning"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Longest Streak</span>
+                <span class="stat-value">@LongestStreak days</span>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger">@ErrorMessage</div>
+    }
+</div>
+
+@code {
+    private DateTime CurrentDate = DateTime.Today;
+    private HashSet<DateTime> EntryDates = new();
+    private int TotalEntries = 0;
+    private int CurrentStreak = 0;
+    private int LongestStreak = 0;
+    private string ErrorMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            // Get all entries
+            var entriesResult = await JournalService.GetEntriesAsync(1, 1000);
+            if (entriesResult.Success && entriesResult.Data != null)
+            {
+                EntryDates = new HashSet<DateTime>(entriesResult.Data.Select(e => e.Date.Date));
+                TotalEntries = entriesResult.Data.Count;
+            }
+
+            // Get streak data
+            var streakResult = await JournalService.GetStreakAsync();
+            if (streakResult.Success && streakResult.Data != default)
+            {
+                CurrentStreak = streakResult.Data.current;
+                LongestStreak = streakResult.Data.longest;
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error loading calendar: {ex.Message}";
+        }
+    }
+
+    private void PreviousMonth()
+    {
+        CurrentDate = CurrentDate.AddMonths(-1);
+    }
+
+    private void NextMonth()
+    {
+        CurrentDate = CurrentDate.AddMonths(1);
+    }
+
+    private void GoToEntry(DateTime date)
+    {
+        NavigationManager.NavigateTo($"/journal/{date:yyyy-MM-dd}");
+    }
+}

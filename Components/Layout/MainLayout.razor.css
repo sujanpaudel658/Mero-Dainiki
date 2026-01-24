@@ -7,7 +7,6 @@
 
 main {
     flex: 1;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
 .sidebar {
@@ -27,7 +26,7 @@ main {
 }
 
 .top-row {
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--background-color, #fff);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(99, 102, 241, 0.1);
     justify-content: flex-end;

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
@@ -7,13 +7,41 @@
     <base href="/" />
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="Mero-Dainiki.styles.css" />
-    <link rel="stylesheet" href="css/bootstrap/app.css" />
-    <link rel="stylesheet" href="css/bootstrap/Home.css" />
+    <link rel="stylesheet" href="css/app.css" />
 
     <link rel="icon" href="data:,">
+    
+    <script>
+        // Initialize theme immediately to prevent flash
+        (function() {
+            var theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.classList.add(theme);
+            document.documentElement.setAttribute('data-theme', theme);
+            
+            // Initialize font size
+            var fontSize = localStorage.getItem('fontSize') || 'Medium';
+            applyFontSize(fontSize);
+        })();
+        
+        function applyFontSize(size) {
+            var root = document.documentElement;
+            root.setAttribute('data-font-size', size);
+            
+            switch(size) {
+                case 'Small':
+                    root.style.fontSize = '14px';
+                    break;
+                case 'Large':
+                    root.style.fontSize = '18px';
+                    break;
+                default:
+                    root.style.fontSize = '16px';
+            }
+        }
+    </script>
 </head>
 
-<body>
+<body class="light">
 
     <div class="status-bar-safe-area"></div>
 
@@ -26,6 +54,7 @@
     </div>
 
     <script src="_framework/blazor.webview.js" autostart="false"></script>
+    <script src="js/theme.js"></script>
 
 </body>
 

@@ -1,209 +1,329 @@
 @page "/browse"
+@using Mero_Dainiki.Services
+@using Mero_Dainiki.Entities
+@inject IJournalService JournalService
+@inject ITagService TagService
+@inject NavigationManager NavigationManager
 
-<main class="browse-page">
-    <div class="container py-4">
-    <div class="row g-4">
-        <!-- Calendar & Filters -->
-        <div class="col-12 col-lg-4">
-            <div class="card shadow-sm border-0 rounded-4 mb-3 browse-card">
-                <div class="card-body">
-                    <h5 class="card-title mb-3 d-flex align-items-center gap-2">
-                        <i class="bi bi-calendar-week text-primary"></i>
-                        Calendar
-                    </h5>
+<div class="browse-modern-container">
+    <div class="browse-header">
+        <h1><i class="bi bi-book me-2"></i>Browse Journal</h1>
+        <p>Search, filter, and explore your entries</p>
+    </div>
 
-                    <!-- Placeholder calendar (visual only) -->
-                    <table class="table table-sm text-center align-middle mb-0 browse-calendar">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Sun</th>
-                                <th>Mon</th>
-                                <th>Tue</th>
-                                <th>Wed</th>
-                                <th>Thu</th>
-                                <th>Fri</th>
-                                <th>Sat</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @for (int week = 0; week < 5; week++)
-                            {
-                                <tr>
-                                    @for (int day = 1; day <= 7; day++)
-                                    {
-                                        var date = week * 7 + day;
-                                        var hasEntry = CalendarSampleDates.Contains(date);
-                                        var isToday = date == DateTime.Today.Day;
-                                        <td>
-                                            <span class="badge rounded-circle @(isToday ? "text-bg-primary" : hasEntry ? "text-bg-light" : "bg-transparent border")"
-                                                  style="width: 2rem; height: 2rem; line-height: 1.2rem;">
-                                                @date
-                                            </span>
-                                        </td>
-                                    }
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+    <div class="browse-content">
+        <!-- Filters Panel -->
+        <div class="filters-panel">
+            <h3 class="filters-title"><i class="bi bi-funnel me-2"></i>Filters & Search</h3>
+
+            <!-- Search -->
+            <div class="filter-group">
+                <label class="filter-label">Search Title or Content</label>
+                <input type="text" class="filter-input" placeholder="Type to search..." @bind="SearchText" @bind:event="oninput" />
+            </div>
+
+            <!-- Date Range -->
+            <div class="filter-group">
+                <label class="filter-label">Date Range</label>
+                <div class="date-inputs">
+                    <input type="date" class="filter-input" @bind="StartDate" />
+                    <span class="date-separator">to</span>
+                    <input type="date" class="filter-input" @bind="EndDate" />
                 </div>
             </div>
 
-            <div class="card shadow-sm border-0 rounded-4 browse-card">
-                <div class="card-body">
-                    <h5 class="card-title mb-3 d-flex align-items-center gap-2">
-                        <i class="bi bi-funnel text-primary"></i>
-                        Filters
-                    </h5>
-
-                    <div class="mb-3">
-                        <label class="form-label small text-muted text-uppercase mb-1">Search</label>
-                        <input class="form-control" placeholder="Search by title or content..." />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small text-muted text-uppercase mb-1">Date Range</label>
-                        <div class="d-flex gap-2">
-                            <input type="date" class="form-control" />
-                            <input type="date" class="form-control" />
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small text-muted text-uppercase mb-1">Mood</label>
-                        <select class="form-select">
-                            <option value="">Any mood</option>
-                            <option>Positive</option>
-                            <option>Neutral</option>
-                            <option>Negative</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small text-muted text-uppercase mb-1">Tags</label>
-                        <select class="form-select" multiple size="4">
-                            <option>Work</option>
-                            <option>Health</option>
-                            <option>Travel</option>
-                            <option>Reflection</option>
-                            <option>Family</option>
-                        </select>
-                    </div>
-
-                    <button class="btn btn-primary w-100 mb-2">Apply filters</button>
-                    <button class="btn btn-outline-secondary w-100">Reset</button>
+            <!-- Mood Filter -->
+            <div class="filter-group">
+                <label class="filter-label">Filter by Mood</label>
+                <div class="mood-filter-grid">
+                    @foreach (var mood in System.Enum.GetValues<Mood>())
+                    {
+                        var isSelected = SelectedMood == mood;
+                        <button class="mood-filter-btn @(isSelected ? "selected" : "")" 
+                                @onclick="() => ToggleMoodFilter(mood)">
+                            @GetMoodEmoji(mood)
+                        </button>
+                    }
+                    <button class="mood-filter-btn @(SelectedMood == null ? "selected" : "")" 
+                            @onclick="() => SelectedMood = null">
+                        All
+                    </button>
                 </div>
             </div>
+
+            <!-- Tags Filter -->
+            <div class="filter-group">
+                <label class="filter-label">Filter by Tags</label>
+                <div class="tags-filter-list">
+                    @if (AvailableTags.Any())
+                    {
+                        @foreach (var tag in AvailableTags)
+                        {
+                            var isSelected = SelectedTags.Contains(tag.Id);
+                            <button class="tag-filter-btn @(isSelected ? "selected" : "")" 
+                                    @onclick="() => ToggleTagFilter(tag.Id)">
+                                @tag.Name
+                            </button>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">No tags yet</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Apply Filters Button -->
+            <button class="btn-apply-filters" @onclick="ApplyFilters">
+                Apply Filters
+            </button>
+            <button class="btn-clear-filters" @onclick="ClearFilters">
+                Clear All
+            </button>
         </div>
 
-        <!-- Timeline / List View -->
-        <div class="col-12 col-lg-8">
-            <div class="card shadow-sm border-0 rounded-4 h-100 browse-card">
-                <div class="card-body d-flex flex-column">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="card-title mb-0 d-flex align-items-center gap-2">
-                            <i class="bi bi-journal-text text-primary"></i>
-                            Entries
-                        </h5>
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-secondary active">
-                                <i class="bi bi-list-ul me-1"></i>List
-                            </button>
-                            <button class="btn btn-outline-secondary">
-                                <i class="bi bi-calendar3 me-1"></i>Timeline
-                            </button>
-                        </div>
-                    </div>
+        <!-- Entries List -->
+        <div class="entries-panel">
+            <div class="entries-header">
+                <h3><i class="bi bi-journal-bookmark me-2"></i>Entries (@TotalEntries found)</h3>
+                <span class="page-info">Page @CurrentPage of @TotalPages</span>
+            </div>
 
-                    <div class="list-group list-group-flush mb-3 browse-list">
-                        @foreach (var entry in PagedEntries)
+            @if (DisplayedEntries.Any())
+            {
+                <div class="entries-list">
+                    @foreach (var entry in DisplayedEntries)
+                    {
+                        <div class="entry-card" @onclick="() => ViewEntry(entry.Id)">
+                            <div class="entry-header">
+                                <div>
+                                    <h4>@entry.Title</h4>
+                                    <span class="entry-date">@entry.Date.ToString("ddd, MMM dd yyyy")</span>
+                                </div>
+                                <div class="entry-mood">@GetMoodEmoji(entry.PrimaryMood)</div>
+                            </div>
+
+                            <p class="entry-preview">@(entry.Content.Length > 150 ? entry.Content.Substring(0, 150) + "..." : entry.Content)</p>
+
+                            <div class="entry-meta">
+                                <span class="category-badge">@entry.Category</span>
+                                @if (entry.IsFavorite)
+                                {
+                                    <span class="favorite-badge">⭐ Favorite</span>
+                                }
+                                @foreach (var tag in entry.Tags.Take(3))
+                                {
+                                    <span class="tag-badge">@tag.Name</span>
+                                }
+                                @if (entry.Tags.Count > 3)
+                                {
+                                    <span class="tag-badge">+@(entry.Tags.Count - 3)</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination-controls">
+                    <button class="btn-page" @onclick="PreviousPage" disabled="@(CurrentPage <= 1)">
+                        ← Previous
+                    </button>
+
+                    <div class="page-numbers">
+                        @for (int i = 1; i <= TotalPages; i++)
                         {
-                            <button class="list-group-item list-group-item-action py-3 browse-list-item">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <div class="fw-semibold">@entry.Title</div>
-                                        <small class="text-muted">
-                                            @entry.Date.ToString("ddd, MMM dd yyyy") · @entry.PrimaryMood
-                                        </small>
-                                    </div>
-                                    <div class="text-end">
-                                        <span class="badge rounded-pill bg-light text-dark border me-1">@entry.Category</span>
-                                        @foreach (var tag in entry.Tags)
-                                        {
-                                            <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis me-1">@tag</span>
-                                        }
-                                    </div>
-                                </div>
-                                <div class="mt-2 small text-muted text-truncate">
-                                    @entry.Snippet
-                                </div>
+                            var pageNum = i;
+                            <button class="page-number @(CurrentPage == pageNum ? "active" : "")" 
+                                    @onclick="() => GoToPage(pageNum)">
+                                @pageNum
                             </button>
                         }
                     </div>
 
-                    <!-- Pagination (visual only) -->
-                    <nav class="mt-auto">
-                        <ul class="pagination pagination-sm justify-content-end mb-0">
-                            <li class="page-item disabled">
-                                <span class="page-link">Previous</span>
-                            </li>
-                            <li class="page-item active"><span class="page-link">1</span></li>
-                            <li class="page-item"><button class="page-link">2</button></li>
-                            <li class="page-item"><button class="page-link">3</button></li>
-                            <li class="page-item">
-                                <button class="page-link">Next</button>
-                            </li>
-                        </ul>
-                    </nav>
+                    <button class="btn-page" @onclick="NextPage" disabled="@(CurrentPage >= TotalPages)">
+                        Next →
+                    </button>
                 </div>
-            </div>
+            }
+            else
+            {
+                <div class="no-entries">
+                    <p>No entries found matching your filters.</p>
+                </div>
+            }
         </div>
     </div>
-    </div>
-</main>
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert-error">@ErrorMessage</div>
+    }
+</div>
 
 @code {
-    private readonly int[] CalendarSampleDates = { 1, 2, 3, 5, 7, 10, 11, 15, 18, 21, 25, 28 };
+    private string SearchText = "";
+    private DateTime StartDate = DateTime.Today.AddMonths(-1);
+    private DateTime EndDate = DateTime.Today;
+    private Mood? SelectedMood = null;
+    private List<int> SelectedTags = new();
+    private List<Tag> AvailableTags = new();
+    private List<JournalEntry> AllEntries = new();
+    private List<JournalEntry> DisplayedEntries = new();
+    private int CurrentPage = 1;
+    private int PageSize = 10;
+    private int TotalEntries = 0;
+    private int TotalPages = 0;
+    private string ErrorMessage = "";
 
-    private List<EntryListItem> PagedEntries { get; set; } = new()
+    protected override async Task OnInitializedAsync()
     {
-        new EntryListItem
-        {
-            Title = "Morning run in the park",
-            Date = DateTime.Today,
-            PrimaryMood = "Energized",
-            Category = "Fitness",
-            Tags = new [] { "Exercise", "Health" },
-            Snippet = "Felt surprisingly light today. The air was cool and the sky just beginning to turn orange..."
-        },
-        new EntryListItem
-        {
-            Title = "Planning next week",
-            Date = DateTime.Today.AddDays(-1),
-            PrimaryMood = "Thoughtful",
-            Category = "Planning",
-            Tags = new [] { "Work", "Projects" },
-            Snippet = "Spent time outlining priorities for next week. Trying to balance deep work with rest..."
-        },
-        new EntryListItem
-        {
-            Title = "Movie night with friends",
-            Date = DateTime.Today.AddDays(-2),
-            PrimaryMood = "Happy",
-            Category = "Friends",
-            Tags = new [] { "Friends", "Relaxed" },
-            Snippet = "Laughed so much my cheeks hurt. It felt good to disconnect from screens for a while..."
-        }
-    };
-
-    private class EntryListItem
-    {
-        public string Title { get; set; } = "";
-        public DateTime Date { get; set; }
-        public string PrimaryMood { get; set; } = "";
-        public string Category { get; set; } = "";
-        public string[] Tags { get; set; } = Array.Empty<string>();
-        public string Snippet { get; set; } = "";
+        await LoadData();
     }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            var entriesResult = await JournalService.GetEntriesAsync(1, 1000);
+            if (entriesResult.Success && entriesResult.Data != null)
+            {
+                AllEntries = entriesResult.Data.OrderByDescending(e => e.Date).ToList();
+            }
+
+            var tagsResult = await TagService.GetAllTagsAsync();
+            if (tagsResult.Success && tagsResult.Data != null)
+            {
+                AvailableTags = tagsResult.Data;
+            }
+
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error loading data: {ex.Message}";
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        var filtered = AllEntries.Where(e =>
+        {
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                var searchLower = SearchText.ToLower();
+                if (!e.Title.ToLower().Contains(searchLower) && !e.Content.ToLower().Contains(searchLower))
+                    return false;
+            }
+            if (e.Date.Date < StartDate.Date || e.Date.Date > EndDate.Date)
+                return false;
+            if (SelectedMood.HasValue && e.PrimaryMood != SelectedMood.Value)
+                return false;
+            if (SelectedTags.Any() && !e.Tags.Any(t => SelectedTags.Contains(t.Id)))
+                return false;
+            return true;
+        }).ToList();
+
+        TotalEntries = filtered.Count;
+        TotalPages = (int)Math.Ceiling((double)TotalEntries / PageSize);
+        CurrentPage = 1;
+        UpdateDisplayedEntries(filtered);
+    }
+
+    private void UpdateDisplayedEntries(List<JournalEntry> entries)
+    {
+        DisplayedEntries = entries
+            .Skip((CurrentPage - 1) * PageSize)
+            .Take(PageSize)
+            .ToList();
+    }
+
+    private void ToggleMoodFilter(Mood mood)
+    {
+        SelectedMood = SelectedMood == mood ? null : mood;
+    }
+
+    private void ToggleTagFilter(int tagId)
+    {
+        if (SelectedTags.Contains(tagId))
+            SelectedTags.Remove(tagId);
+        else
+            SelectedTags.Add(tagId);
+    }
+
+    private void ClearFilters()
+    {
+        SearchText = "";
+        StartDate = DateTime.Today.AddMonths(-1);
+        EndDate = DateTime.Today;
+        SelectedMood = null;
+        SelectedTags.Clear();
+        ApplyFilters();
+    }
+
+    private void PreviousPage()
+    {
+        if (CurrentPage > 1)
+        {
+            CurrentPage--;
+            var filtered = GetFilteredEntries();
+            UpdateDisplayedEntries(filtered);
+        }
+    }
+
+    private void NextPage()
+    {
+        if (CurrentPage < TotalPages)
+        {
+            CurrentPage++;
+            var filtered = GetFilteredEntries();
+            UpdateDisplayedEntries(filtered);
+        }
+    }
+
+    private void GoToPage(int page)
+    {
+        CurrentPage = page;
+        var filtered = GetFilteredEntries();
+        UpdateDisplayedEntries(filtered);
+    }
+
+    private List<JournalEntry> GetFilteredEntries()
+    {
+        return AllEntries.Where(e =>
+        {
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                var searchLower = SearchText.ToLower();
+                if (!e.Title.ToLower().Contains(searchLower) && !e.Content.ToLower().Contains(searchLower))
+                    return false;
+            }
+            if (e.Date.Date < StartDate.Date || e.Date.Date > EndDate.Date)
+                return false;
+            if (SelectedMood.HasValue && e.PrimaryMood != SelectedMood.Value)
+                return false;
+            if (SelectedTags.Any() && !e.Tags.Any(t => SelectedTags.Contains(t.Id)))
+                return false;
+            return true;
+        }).ToList();
+    }
+
+    private void ViewEntry(int id)
+    {
+        var entry = AllEntries.FirstOrDefault(e => e.Id == id);
+        if (entry != null)
+        {
+            NavigationManager.NavigateTo($"/journal/{entry.Date:yyyy-MM-dd}");
+        }
+    }
+
+    private string GetMoodEmoji(Mood mood) => mood switch
+    {
+        Mood.Happy => "😊",
+        Mood.Neutral => "😐",
+        Mood.Sad => "😢",
+        _ => "😐"
+    };
 }
 
 

@@ -1,4 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
+using Mero_Dainiki.Data;
+using Mero_Dainiki.Services;
 
 namespace Mero_Dainiki
 {
@@ -16,12 +19,32 @@ namespace Mero_Dainiki
 
             builder.Services.AddMauiBlazorWebView();
 
+            // Register Database Context
+            builder.Services.AddDbContext<AppDbContext>();
+
+            // Register Services
+            builder.Services.AddSingleton<IThemeService, ThemeService>();
+            builder.Services.AddScoped<IJournalService, JournalService>();
+            builder.Services.AddScoped<ITagService, TagService>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<ISecurityService, SecurityService>();
+            builder.Services.AddScoped<IExportService, ExportService>();
+
 #if DEBUG
-    		builder.Services.AddBlazorWebViewDeveloperTools();
-    		builder.Logging.AddDebug();
+            builder.Services.AddBlazorWebViewDeveloperTools();
+            builder.Logging.AddDebug();
 #endif
 
-            return builder.Build();
+            var app = builder.Build();
+
+            // Ensure database is created at startup
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                db.Database.EnsureCreated();
+            }
+
+            return app;
         }
     }
 }

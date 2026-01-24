@@ -1,0 +1,134 @@
+@page "/register"
+@using Mero_Dainiki.Services
+@using Mero_Dainiki.Models
+@layout Mero_Dainiki.Components.Layout.EmptyLayout
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<div class="register-container">
+    <div class="register-gradient"></div>
+    <div class="register-card">
+        <div class="register-header">
+            <h1 class="register-title">Mero-Dainiki</h1>
+            <p class="register-subtitle">Create your account</p>
+        </div>
+
+        <EditForm Model="@registerModel" OnValidSubmit="HandleRegister">
+            <DataAnnotationsValidator />
+
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <InputText class="form-control" @bind-Value="registerModel.Username" placeholder="Choose a username" />
+                <ValidationMessage For="@(() => registerModel.Username)" class="error-text" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" @bind="registerModel.Email" placeholder="Enter your email" />
+                <ValidationMessage For="@(() => registerModel.Email)" class="error-text" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <InputText type="password" class="form-control" @bind-Value="registerModel.Password" placeholder="Create a password" />
+                <ValidationMessage For="@(() => registerModel.Password)" class="error-text" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Confirm Password</label>
+                <InputText type="password" class="form-control" @bind-Value="registerModel.ConfirmPassword" placeholder="Confirm your password" />
+                <ValidationMessage For="@(() => registerModel.ConfirmPassword)" class="error-text" />
+            </div>
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert-box error">
+                    @ErrorMessage
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(SuccessMessage))
+            {
+                <div class="alert-box success">
+                    @SuccessMessage
+                </div>
+            }
+
+            <button type="submit" class="btn-register" disabled="@IsLoading">
+                @if (IsLoading)
+                {
+                    <span>Creating Account...</span>
+                }
+                else
+                {
+                    <span>Create Account</span>
+                }
+            </button>
+
+            <div class="register-footer">
+                <p>Already have an account? <a href="/login">Sign In</a></p>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+
+@code {
+    private RegisterModel registerModel = new();
+    private bool IsLoading = false;
+    private string? ErrorMessage { get; set; }
+    private string? SuccessMessage { get; set; }
+
+    private async Task HandleRegister()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        try
+        {
+            var result = await AuthService.RegisterAsync(new UserRegisterModel
+            {
+                Username = registerModel.Username,
+                Email = registerModel.Email,
+                Password = registerModel.Password,
+                ConfirmPassword = registerModel.ConfirmPassword,
+                Pin = ""
+            });
+
+            if (result.Success)
+            {
+                // Save authentication token and user info
+                await JS.InvokeVoidAsync("localStorage.setItem", "authToken", result.Data!.Id.ToString());
+                await JS.InvokeVoidAsync("localStorage.setItem", "userId", result.Data!.Id.ToString());
+                await JS.InvokeVoidAsync("localStorage.setItem", "username", result.Data!.Username);
+                
+                SuccessMessage = "Account created successfully! Redirecting to dashboard...";
+                await Task.Delay(1500);
+                Navigation.NavigateTo("/dashboard");
+            }
+            else
+            {
+                ErrorMessage = result.ErrorMessage ?? "Registration failed";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private class RegisterModel
+    {
+        public string Username { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Password { get; set; } = "";
+        public string ConfirmPassword { get; set; } = "";
+    }
+}
+

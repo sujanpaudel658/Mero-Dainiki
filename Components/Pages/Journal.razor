@@ -1,0 +1,506 @@
+@page "/journal"
+@page "/journal/{EntryDateStr}"
+@using Mero_Dainiki.Entities
+@using Mero_Dainiki.Models
+@using Mero_Dainiki.Services
+@inject IJournalService JournalService
+@inject ITagService TagService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+@if (PinRequired && !PinVerified)
+{
+    <div class="pin-verification-modal">
+        <div class="pin-verification-dialog">
+            <div class="pin-header">
+                <h3><i class="bi bi-lock-fill me-2"></i>Journal Protected</h3>
+                <p>This journal is protected with a PIN. Please enter your PIN to continue.</p>
+            </div>
+            <div class="pin-body">
+                <input type="password" 
+                       class="form-control form-control-lg pin-input" 
+                       placeholder="Enter your PIN"
+                       @bind="PinInput"
+                       @onkeyup="HandlePinKeyPress"
+                       maxlength="10" />
+                @if (PinError)
+                {
+                    <div class="alert alert-danger mt-3">Incorrect PIN. Please try again.</div>
+                }
+            </div>
+            <div class="pin-footer">
+                <button class="btn btn-primary w-100" @onclick="VerifyPin">Unlock Journal</button>
+                <button class="btn btn-outline-secondary w-100 mt-2" @onclick="GoBack">Go Back</button>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+<div class="journal-modern-container">
+    <!-- Header -->
+    <header class="journal-header-modern">
+        <div class="header-content">
+            <div class="header-left">
+                <h1 class="header-title">@(IsEdit ? "Edit Entry" : "New Entry")</h1>
+                <div class="header-meta">
+                    <span class="meta-date">
+                        <i class="bi bi-calendar-event"></i>
+                        @DisplayDate
+                    </span>
+                    <span class="meta-divider"></span>
+                    <span class="meta-status @(IsEdit ? "status-draft" : "status-new")">
+                        @(IsEdit ? "Draft" : "New")
+                    </span>
+                </div>
+            </div>
+            <button class="btn-save-modern" @onclick="SaveEntry" disabled="@IsSaving">
+                @if (IsSaving)
+                {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                Save
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="journal-main-modern">
+        <div class="journal-grid">
+            <!-- Left Column: Editor (60%) -->
+            <div class="editor-column">
+                <!-- Title Input -->
+                <div class="input-group-modern">
+                    <label class="label-modern">Title</label>
+                    <input type="text" 
+                           class="input-modern input-title" 
+                           placeholder="Entry Title"
+                           @bind="EntryModel.Title" />
+                </div>
+
+                <!-- Thoughts Section -->
+                <div class="input-group-modern flex-1 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="label-modern">Thoughts</label>
+                        <span class="word-count">Words: @WordCount</span>
+                    </div>
+
+                    <!-- Formatting Toolbar -->
+                    <div class="formatting-toolbar-modern">
+                        <button class="toolbar-btn" @onclick="InsertBold" title="Bold (Ctrl+B)">
+                            <i class="bi bi-type-bold"></i>
+                        </button>
+                        <button class="toolbar-btn" @onclick="InsertItalic" title="Italic (Ctrl+I)">
+                            <i class="bi bi-type-italic"></i>
+                        </button>
+                        <button class="toolbar-btn" @onclick="InsertList" title="List (Ctrl+Shift+U)">
+                            <i class="bi bi-list-ul"></i>
+                        </button>
+                        <button class="toolbar-btn" @onclick="InsertLink" title="Link (Ctrl+K)">
+                            <i class="bi bi-link-45deg"></i>
+                        </button>
+                        <div class="toolbar-divider"></div>
+                        <button class="toolbar-btn @(ShowPreview ? "active" : "")" @onclick="TogglePreview" title="Preview">
+                            <i class="bi @(ShowPreview ? "bi-eye-slash" : "bi-eye")"></i>
+                        </button>
+                    </div>
+
+                    <!-- Preview or Editor -->
+                    @if (ShowPreview)
+                    {
+                        <div class="markdown-preview-modern">
+                            @((MarkupString)ConvertMarkdownToHtml(EntryModel.Content))
+                        </div>
+                    }
+
+                    <textarea class="textarea-modern" 
+                              rows="@(ShowPreview ? 8 : 12)"
+                              placeholder="Write something..."
+                              @bind="EntryModel.Content"
+                              @onkeydown="HandleKeyboardShortcut"></textarea>
+                </div>
+            </div>
+
+            <!-- Right Column: Metadata (40%) -->
+            <div class="metadata-column">
+                <!-- Mood Selection -->
+                <div class="card-modern">
+                    <label class="label-modern">Mood</label>
+                    <div class="mood-grid">
+                        @foreach (var mood in Enum.GetValues<Mood>())
+                        {
+                            var isSelected = EntryModel.PrimaryMood == mood;
+                            <button class="mood-btn @(isSelected ? "selected" : "")"
+                                    @onclick="() => EntryModel.PrimaryMood = mood"
+                                    title="@mood.ToString()">
+                                <span>@GetMoodEmoji(mood)</span>
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Secondary Moods -->
+                <div class="card-modern">
+                    <label class="label-modern">Secondary</label>
+                    <div class="secondary-moods">
+                        @foreach (var mood in Enum.GetValues<Mood>().Take(4))
+                        {
+                            var isSelected = EntryModel.SecondaryMoods.Contains(mood);
+                            <button class="secondary-mood-btn @(isSelected ? "selected" : "")"
+                                    @onclick="() => ToggleSecondaryMood(mood)">
+                                <span>@GetMoodEmoji(mood)</span>
+                                <span class="mood-label">@mood.ToString()</span>
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Category -->
+                <div class="card-modern">
+                    <label class="label-modern">Category</label>
+                    <select class="select-modern" @bind="EntryModel.Category">
+                        @foreach (var category in Enum.GetValues<EntryCategory>())
+                        {
+                            <option value="@category">@category.ToString()</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Favorite & Privacy -->
+                <div class="card-modern">
+                    <button class="toggle-btn-modern" @onclick="() => EntryModel.IsFavorite = !EntryModel.IsFavorite">
+                        <i class="bi @(EntryModel.IsFavorite ? "bi-star-fill" : "bi-star")"></i>
+                        <span>@(EntryModel.IsFavorite ? "Favorite" : "Mark Favorite")</span>
+                    </button>
+                </div>
+
+                <!-- Tags Selection -->
+                @if (AvailableTags.Any())
+                {
+                    <div class="card-modern">
+                        <label class="label-modern d-block mb-2">Tags</label>
+                        <div class="tags-selection">
+                            @foreach (var tag in AvailableTags)
+                            {
+                                var isSelected = EntryModel.TagIds?.Contains(tag.Id) ?? false;
+                                <button class="tag-select-btn @(isSelected ? "selected" : "")"
+                                        @onclick="() => ToggleTag(tag.Id)">
+                                    @tag.Name
+                                </button>
+                            }
+                        </div>
+                        <small class="text-muted d-block mt-2">Selected: @(EntryModel.TagIds?.Count ?? 0) tag(s)</small>
+                    </div>
+                }
+
+                <!-- Delete Button (if editing) -->
+                @if (IsEdit)
+                {
+                    <button class="btn-delete-modern" @onclick="DeleteEntry">
+                        <i class="bi bi-trash"></i>
+                        Delete Entry
+                    </button>
+                }
+
+                <!-- Cancel Button -->
+                <button class="btn-cancel-modern" @onclick="Cancel">
+                    <i class="bi bi-x-lg"></i>
+                    Cancel
+                </button>
+
+                <!-- Message Display -->
+                @if (!string.IsNullOrEmpty(Message))
+                {
+                    <div class="alert @(IsSuccess ? "alert-success" : "alert-danger") mt-3">
+                        @Message
+                    </div>
+                }
+            </div>
+        </div>
+    </main>
+</div>
+}
+
+@code {
+    [Parameter] public string? EntryDateStr { get; set; }
+
+    private JournalEntryViewModel EntryModel { get; set; } = new();
+    private List<Tag> AvailableTags { get; set; } = new();
+    private bool IsEdit => EntryModel.Id > 0;
+    private bool IsSaving { get; set; } = false;
+    private bool ShowPreview { get; set; } = false;
+    private string? Message { get; set; }
+    private bool IsSuccess { get; set; }
+    private bool PinRequired { get; set; } = false;
+    private bool PinVerified { get; set; } = false;
+    private string PinInput { get; set; } = "";
+    private bool PinError { get; set; } = false;
+    
+    private string DisplayDate => EntryModel.Date.ToString("dddd, MMMM dd, yyyy");
+    private int WordCount => EntryModel.Content?.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length ?? 0;
+
+    private void ToggleTag(int tagId)
+    {
+        if (EntryModel.TagIds == null)
+            EntryModel.TagIds = new List<int>();
+
+        if (EntryModel.TagIds.Contains(tagId))
+            EntryModel.TagIds.Remove(tagId);
+        else
+            EntryModel.TagIds.Add(tagId);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Check if PIN is enabled
+        var pinEnabledStr = await JS.InvokeAsync<string>("localStorage.getItem", "pinEnabled");
+        if (pinEnabledStr == "true")
+        {
+            PinRequired = true;
+            PinVerified = false;
+            return; // Don't load data until PIN is verified
+        }
+        else
+        {
+            PinVerified = true;
+        }
+
+        var tagsResult = await TagService.GetAllTagsAsync();
+        if (tagsResult.Success && tagsResult.Data != null)
+        {
+            AvailableTags = tagsResult.Data;
+        }
+
+        DateTime targetDate = DateTime.Today;
+        if (!string.IsNullOrEmpty(EntryDateStr) && DateTime.TryParse(EntryDateStr, out var parsedDate))
+        {
+            targetDate = parsedDate;
+        }
+
+        EntryModel.Date = targetDate;
+
+        var entryResult = await JournalService.GetEntryByDateAsync(targetDate);
+        if (entryResult.Success && entryResult.Data != null)
+        {
+            var entry = entryResult.Data;
+            var secondaryMoods = new List<Mood>();
+            if (entry.SecondaryMood1.HasValue)
+                secondaryMoods.Add(entry.SecondaryMood1.Value);
+            if (entry.SecondaryMood2.HasValue)
+                secondaryMoods.Add(entry.SecondaryMood2.Value);
+
+            EntryModel = new JournalEntryViewModel
+            {
+                Id = entry.Id,
+                Title = entry.Title,
+                Content = entry.Content,
+                Date = entry.Date,
+                PrimaryMood = entry.PrimaryMood,
+                SecondaryMoods = secondaryMoods,
+                Category = entry.Category,
+                IsFavorite = entry.IsFavorite,
+                TagIds = entry.Tags.Select(t => t.Id).ToList()
+            };
+        }
+    }
+
+    private string GetMoodEmoji(Mood mood) => mood switch
+    {
+        Mood.VeryHappy => "😄",
+        Mood.Happy => "🙂",
+        Mood.Neutral => "😐",
+        Mood.Sad => "😔",
+        Mood.VerySad => "😢",
+        _ => "😐"
+    };
+
+    private void ToggleSecondaryMood(Mood mood)
+    {
+        if (EntryModel.SecondaryMoods.Contains(mood))
+        {
+            EntryModel.SecondaryMoods.Remove(mood);
+        }
+        else if (EntryModel.SecondaryMoods.Count < 2)
+        {
+            EntryModel.SecondaryMoods.Add(mood);
+        }
+    }
+
+    private void TogglePreview() => ShowPreview = !ShowPreview;
+
+    private Task HandleKeyboardShortcut(KeyboardEventArgs e)
+    {
+        if (e.CtrlKey || e.MetaKey)
+        {
+            switch (e.Key.ToLower())
+            {
+                case "b":
+                    InsertBold();
+                    break;
+                case "i":
+                    InsertItalic();
+                    break;
+                case "k":
+                    InsertLink();
+                    break;
+                case "`":
+                    InsertCodeBlock();
+                    break;
+            }
+
+            if (e.ShiftKey)
+            {
+                switch (e.Key.ToLower())
+                {
+                    case "u":
+                        InsertList();
+                        break;
+                }
+            }
+        }
+        return Task.CompletedTask;
+    }
+
+    private void InsertBold() => EntryModel.Content += "**text**";
+    private void InsertItalic() => EntryModel.Content += "*text*";
+    private void InsertHeading(int level = 2) => EntryModel.Content += $"\n{'#' * level} Heading\n";
+    private void InsertList() => EntryModel.Content += "\n- Item 1\n- Item 2\n";
+    private void InsertOrderedList() => EntryModel.Content += "\n1. Item\n2. Item\n";
+    private void InsertBlockquote() => EntryModel.Content += "\n> Quote\n";
+    private void InsertLink() => EntryModel.Content += "[text](url)";
+    private void InsertCodeBlock() => EntryModel.Content += "\n```\ncode\n```\n";
+    private void InsertStrikethrough() => EntryModel.Content += "~~text~~";
+
+    private string ConvertMarkdownToHtml(string markdown)
+    {
+        if (string.IsNullOrEmpty(markdown)) return "<p></p>";
+        var html = markdown;
+        html = System.Net.WebUtility.HtmlEncode(html);
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"^### (.+?)$", "<h5>$1</h5>", System.Text.RegularExpressions.RegexOptions.Multiline);
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"^## (.+?)$", "<h4>$1</h4>", System.Text.RegularExpressions.RegexOptions.Multiline);
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"^# (.+?)$", "<h3>$1</h3>", System.Text.RegularExpressions.RegexOptions.Multiline);
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"\*\*(.+?)\*\*", "<strong>$1</strong>");
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"\*(.+?)\*", "<em>$1</em>");
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"~~(.+?)~~", "<del>$1</del>");
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"\[(.+?)\]\((.+?)\)", "<a href=\"$2\" target=\"_blank\">$1</a>");
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"```(.+?)```", "<pre><code>$1</code></pre>", System.Text.RegularExpressions.RegexOptions.Singleline);
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"`(.+?)`", "<code>$1</code>");
+        html = html.Replace("\n", "<br>");
+        return $"<div>{html}</div>";
+    }
+
+    private async Task SaveEntry()
+    {
+        IsSaving = true;
+        Message = null;
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(EntryModel.Content))
+            {
+                Message = "Please write something in your entry.";
+                IsSuccess = false;
+                return;
+            }
+
+            var result = IsEdit
+                ? await JournalService.UpdateEntryAsync(EntryModel)
+                : await JournalService.CreateEntryAsync(EntryModel);
+
+            if (result.Success)
+            {
+                Message = IsEdit ? "Entry updated successfully! Redirecting..." : "Entry saved successfully! Redirecting...";
+                IsSuccess = true;
+                if (!IsEdit && result.Data != null)
+                {
+                    EntryModel.Id = result.Data.Id;
+                }
+
+                await Task.Delay(1500);
+                Navigation.NavigateTo("/browse");
+            }
+            else
+            {
+                Message = result.ErrorMessage ?? "An error occurred while saving your entry.";
+                IsSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = $"Error: {ex.Message}";
+            IsSuccess = false;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private async Task DeleteEntry()
+    {
+        if (EntryModel.Id > 0)
+        {
+            var result = await JournalService.DeleteEntryAsync(EntryModel.Id);
+            if (result.Success)
+            {
+                Navigation.NavigateTo("/browse");
+            }
+            else
+            {
+                Message = result.ErrorMessage ?? "Error deleting entry.";
+                IsSuccess = false;
+            }
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/browse");
+    }
+
+    private async Task VerifyPin()
+    {
+        if (string.IsNullOrWhiteSpace(PinInput))
+        {
+            PinError = true;
+            return;
+        }
+
+        try
+        {
+            var storedPin = await JS.InvokeAsync<string>("localStorage.getItem", "userPin");
+            
+            if (storedPin != null && PinInput == storedPin)
+            {
+                PinVerified = true;
+                PinError = false;
+                PinInput = "";
+                StateHasChanged();
+                // Now load the data
+                await OnInitializedAsync();
+            }
+            else
+            {
+                PinError = true;
+                PinInput = "";
+            }
+        }
+        catch
+        {
+            PinError = true;
+        }
+    }
+
+    private async void HandlePinKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await VerifyPin();
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/browse");
+    }
+}

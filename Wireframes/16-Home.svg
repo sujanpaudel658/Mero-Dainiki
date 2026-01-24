@@ -1,0 +1,101 @@
+<svg viewBox="0 0 375 667" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sketch style definitions -->
+  <defs>
+    <filter id="rough">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" />
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="375" height="667" fill="#fafafa" stroke="#333" stroke-width="2" filter="url(#rough)"/>
+  
+  <!-- Header -->
+  <rect width="375" height="60" fill="#fff" stroke="#ddd" stroke-width="1" filter="url(#rough)"/>
+  <text x="20" y="42" font-size="20" font-weight="bold" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+    ← Home
+  </text>
+  
+  <!-- Welcome banner -->
+  <rect x="20" y="85" width="335" height="90" fill="#e3f2fd" stroke="#2196f3" stroke-width="2" rx="8" filter="url(#rough)"/>
+  <text x="35" y="115" font-size="16" font-weight="bold" fill="#1976d2" font-family="Arial, sans-serif" filter="url(#rough)">
+    Welcome back, John! 👋
+  </text>
+  <text x="35" y="140" font-size="12" fill="#1565c0" font-family="Arial, sans-serif" filter="url(#rough)">
+    You have a 7-day writing streak!
+  </text>
+  <text x="35" y="160" font-size="12" fill="#1565c0" font-family="Arial, sans-serif" filter="url(#rough)">
+    Write today to keep your momentum going.
+  </text>
+  
+  <!-- Quick actions -->
+  <text x="20" y="205" font-size="12" font-weight="bold" fill="#666" font-family="Arial, sans-serif" filter="url(#rough)">
+    Quick Start
+  </text>
+  
+  <g>
+    <rect x="20" y="220" width="160" height="60" fill="none" stroke="#333" stroke-width="2" rx="6" filter="url(#rough)"/>
+    <text x="100" y="245" font-size="28" text-anchor="middle" filter="url(#rough)">✎</text>
+    <text x="100" y="270" font-size="11" text-anchor="middle" font-weight="bold" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+      New Entry
+    </text>
+  </g>
+  
+  <g>
+    <rect x="195" y="220" width="160" height="60" fill="none" stroke="#333" stroke-width="2" rx="6" filter="url(#rough)"/>
+    <text x="275" y="245" font-size="28" text-anchor="middle" filter="url(#rough)">📅</text>
+    <text x="275" y="270" font-size="11" text-anchor="middle" font-weight="bold" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+      Calendar
+    </text>
+  </g>
+  
+  <!-- Featured content -->
+  <text x="20" y="325" font-size="12" font-weight="bold" fill="#666" font-family="Arial, sans-serif" filter="url(#rough)">
+    Your Highlights
+  </text>
+  
+  <!-- Highlight 1 -->
+  <rect x="20" y="340" width="335" height="65" fill="none" stroke="#333" stroke-width="2" rx="6" filter="url(#rough)"/>
+  <text x="30" y="360" font-size="12" font-weight="bold" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+    Amazing day at work ⭐
+  </text>
+  <text x="30" y="378" font-size="10" fill="#999" font-family="Arial, sans-serif" filter="url(#rough)">
+    Your favorite entry • January 24
+  </text>
+  <text x="30" y="395" font-size="9" fill="#666" font-family="Arial, sans-serif" filter="url(#rough)">
+    "Today was incredibly productive. Completed the..."
+  </text>
+  
+  <!-- Highlight 2 -->
+  <rect x="20" y="420" width="335" height="65" fill="none" stroke="#333" stroke-width="2" rx="6" filter="url(#rough)"/>
+  <text x="30" y="440" font-size="12" font-weight="bold" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+    Peaceful morning reflection ⭐
+  </text>
+  <text x="30" y="458" font-size="10" fill="#999" font-family="Arial, sans-serif" filter="url(#rough)">
+    Your favorite entry • January 23
+  </text>
+  <text x="30" y="475" font-size="9" fill="#666" font-family="Arial, sans-serif" filter="url(#rough)">
+    "Woke up early and got so much done..."
+  </text>
+  
+  <!-- Stats preview -->
+  <text x="20" y="530" font-size="12" font-weight="bold" fill="#666" font-family="Arial, sans-serif" filter="url(#rough)">
+    This Month Stats
+  </text>
+  
+  <rect x="20" y="545" width="160" height="55" fill="none" stroke="#ddd" stroke-width="1" rx="4" filter="url(#rough)"/>
+  <text x="30" y="563" font-size="10" fill="#999" font-family="Arial, sans-serif" filter="url(#rough)">
+    Entries this month
+  </text>
+  <text x="100" y="588" font-size="24" text-anchor="middle" font-weight="bold" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+    18
+  </text>
+  
+  <rect x="195" y="545" width="160" height="55" fill="none" stroke="#ddd" stroke-width="1" rx="4" filter="url(#rough)"/>
+  <text x="205" y="563" font-size="10" fill="#999" font-family="Arial, sans-serif" filter="url(#rough)">
+    Words written
+  </text>
+  <text x="275" y="588" font-size="24" text-anchor="middle" font-weight="bold" fill="#333" font-family="Arial, sans-serif" filter="url(#rough)">
+    5.2K
+  </text>
+</svg>

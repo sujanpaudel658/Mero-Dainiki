@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using Mero_Dainiki.Services
 
 <main class="home-page">
     <div class="container py-4">
@@ -27,7 +28,7 @@
                         <i class="bi bi-fire"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-value">7</div>
+                        <div class="stat-value">@CurrentStreak</div>
                         <div class="stat-label">Day Streak</div>
                     </div>
                 </div>
@@ -38,7 +39,7 @@
                         <i class="bi bi-journal-text"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-value">42</div>
+                        <div class="stat-value">@TotalEntries</div>
                         <div class="stat-label">Total Entries</div>
                     </div>
                 </div>
@@ -49,7 +50,7 @@
                         <i class="bi bi-heart-fill"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-value">18</div>
+                        <div class="stat-value">@ThisMonthEntries</div>
                         <div class="stat-label">This Month</div>
                     </div>
                 </div>
@@ -60,7 +61,7 @@
                         <i class="bi bi-tag-fill"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-value">12</div>
+                        <div class="stat-value">@ActiveTags</div>
                         <div class="stat-label">Active Tags</div>
                     </div>
                 </div>
@@ -166,10 +167,53 @@
 
 @code {
     [Inject] private NavigationManager? NavigationManager { get; set; }
+    [Inject] private IJournalService? JournalService { get; set; }
+    [Inject] private ITagService? TagService { get; set; }
+
+    private int CurrentStreak { get; set; } = 0;
+    private int TotalEntries { get; set; } = 0;
+    private int ThisMonthEntries { get; set; } = 0;
+    private int ActiveTags { get; set; } = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStats();
+    }
+
+    private async Task LoadStats()
+    {
+        // Get streak info
+        if (JournalService != null)
+        {
+            var streakResult = await JournalService.GetStreakAsync();
+            if (streakResult.Success)
+            {
+                CurrentStreak = streakResult.Data.current;
+            }
+
+            // Get total entries
+            var entriesResult = await JournalService.GetEntriesAsync(1000);
+            if (entriesResult.Success && entriesResult.Data != null)
+            {
+                TotalEntries = entriesResult.Data.Count;
+                ThisMonthEntries = entriesResult.Data.Count(e => e.Date.Month == DateTime.Now.Month && e.Date.Year == DateTime.Now.Year);
+            }
+        }
+
+        // Get active tags count
+        if (TagService != null)
+        {
+            var tagsResult = await TagService.GetAllTagsAsync();
+            if (tagsResult.Success && tagsResult.Data != null)
+            {
+                ActiveTags = tagsResult.Data.Count;
+            }
+        }
+    }
 
     private void NavigateToEntry()
     {
-        NavigationManager?.NavigateTo("/entry");
+        NavigationManager?.NavigateTo("/journal");
     }
 
     private void NavigateToBrowse()

@@ -1,0 +1,274 @@
+@page "/export"
+@using Mero_Dainiki.Services
+@using Mero_Dainiki.Entities
+@inject IJournalService JournalService
+@inject IExportService ExportService
+
+<div class="export-container">
+    <header class="export-header">
+        <h1><i class="bi bi-download"></i> Export Journals</h1>
+        <p>Export your entries as HTML or Markdown</p>
+    </header>
+
+    <main class="export-content">
+        <div class="export-card">
+            <div class="card-header">
+                <h3><i class="bi bi-funnel"></i> Select Date Range</h3>
+            </div>
+
+            <div class="card-content">
+                <div class="filter-section">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Start Date</label>
+                            <input type="date" class="form-input" @bind="StartDate" />
+                        </div>
+                        <div class="form-group">
+                            <label>End Date</label>
+                            <input type="date" class="form-input" @bind="EndDate" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Category (Optional)</label>
+                        <select class="form-input" @bind="SelectedCategory">
+                            <option value="">All Categories</option>
+                            @foreach (var category in Enum.GetValues<EntryCategory>())
+                            {
+                                <option value="@category">@category</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mood (Optional)</label>
+                        <select class="form-input" @bind="SelectedMood">
+                            <option value="">All Moods</option>
+                            @foreach (var mood in Enum.GetValues<Mood>())
+                            {
+                                <option value="@mood">@mood</option>
+                            }
+                        </select>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(FilterMessage))
+                    {
+                        <div class="alert @(FilterSuccess ? "alert-success" : "alert-warning")">
+                            @FilterMessage
+                        </div>
+                    }
+
+                    <button class="btn btn-primary" @onclick="ApplyFilter" disabled="@IsLoading">
+                        <i class="bi bi-search"></i> @(IsLoading ? "Loading..." : "Apply Filter")
+                    </button>
+                </div>
+
+                @if (FilteredEntries.Any())
+                {
+                    <div class="results-section">
+                        <h4>Found @FilteredEntries.Count Entries</h4>
+
+                        <div class="export-formats">
+                            <h4>Export Format</h4>
+                            <div class="format-options">
+                                <div class="format-card @(ExportFormat == "html" ? "selected" : "")" 
+                                     @onclick='() => ExportFormat = "html"'>
+                                    <i class="bi bi-filetype-html"></i>
+                                    <h5>HTML</h5>
+                                    <p>For printing or viewing in browser</p>
+                                </div>
+
+                                <div class="format-card @(ExportFormat == "markdown" ? "selected" : "")" 
+                                     @onclick='() => ExportFormat = "markdown"'>
+                                    <i class="bi bi-filetype-md"></i>
+                                    <h5>Markdown</h5>
+                                    <p>Plain text, easy to edit</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="export-actions">
+                            <button class="btn btn-success" @onclick="ExportNow" disabled="@IsExporting">
+                                <i class="bi bi-download"></i> @(IsExporting ? "Exporting..." : "Export Now")
+                            </button>
+                            <button class="btn btn-secondary" @onclick="CopyToClipboard" disabled="@IsExporting">
+                                <i class="bi bi-clipboard"></i> Copy to Clipboard
+                            </button>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(ExportMessage))
+                        {
+                            <div class="alert @(ExportSuccess ? "alert-success" : "alert-danger")">
+                                @ExportMessage
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="export-card">
+            <div class="card-header">
+                <h3><i class="bi bi-lightning"></i> Quick Export</h3>
+            </div>
+            <div class="card-content">
+                <div class="preset-grid">
+                    <button class="preset-btn" @onclick="ExportThisMonth">
+                        <i class="bi bi-calendar-month"></i> This Month
+                    </button>
+                    <button class="preset-btn" @onclick="ExportLastMonth">
+                        <i class="bi bi-calendar"></i> Last Month
+                    </button>
+                    <button class="preset-btn" @onclick="ExportThisYear">
+                        <i class="bi bi-calendar-range"></i> This Year
+                    </button>
+                    <button class="preset-btn" @onclick="ExportLast30Days">
+                        <i class="bi bi-hourglass-split"></i> Last 30 Days
+                    </button>
+                    <button class="preset-btn" @onclick="ExportAll">
+                        <i class="bi bi-collection"></i> All Entries
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+@code {
+    // State
+    private DateTime StartDate = DateTime.Today.AddMonths(-1);
+    private DateTime EndDate = DateTime.Today;
+    private string SelectedCategory = "";
+    private string SelectedMood = "";
+    private string ExportFormat = "html";
+    
+    private List<JournalEntry> AllEntries = new();
+    private List<JournalEntry> FilteredEntries = new();
+    
+    private string FilterMessage = "";
+    private string ExportMessage = "";
+    private string CurrentExportContent = "";
+    private bool FilterSuccess, ExportSuccess, IsLoading, IsExporting;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await JournalService.GetEntriesAsync(10000);
+        if (result.Success && result.Data != null)
+            AllEntries = result.Data;
+    }
+
+    private Task ApplyFilter()
+    {
+        IsLoading = true;
+        FilterMessage = "";
+
+        try
+        {
+            var start = DateOnly.FromDateTime(StartDate);
+            var end = DateOnly.FromDateTime(EndDate);
+            
+            IEnumerable<JournalEntry> query = AllEntries
+                .Where(e => DateOnly.FromDateTime(e.Date) >= start && DateOnly.FromDateTime(e.Date) <= end);
+
+            if (Enum.TryParse<EntryCategory>(SelectedCategory, out var category))
+                query = query.Where(e => e.Category == category);
+
+            if (Enum.TryParse<Mood>(SelectedMood, out var mood))
+                query = query.Where(e => e.PrimaryMood == mood || e.SecondaryMood1 == mood || e.SecondaryMood2 == mood);
+
+            FilteredEntries = query.ToList();
+            FilterMessage = FilteredEntries.Any() ? $"Found {FilteredEntries.Count} entries" : "No entries found";
+            FilterSuccess = FilteredEntries.Any();
+        }
+        catch (Exception ex)
+        {
+            FilterMessage = $"Error: {ex.Message}";
+            FilterSuccess = false;
+        }
+
+        IsLoading = false;
+        return Task.CompletedTask;
+    }
+
+    private async Task ExportNow()
+    {
+        IsExporting = true;
+        ExportMessage = "";
+
+        try
+        {
+            var start = DateOnly.FromDateTime(StartDate);
+            var end = DateOnly.FromDateTime(EndDate);
+            
+            var result = ExportFormat == "html"
+                ? await ExportService.ExportToHtmlAsync(FilteredEntries, start, end)
+                : await ExportService.ExportToMarkdownAsync(FilteredEntries, start, end);
+
+            if (result.Success && result.Data != null)
+            {
+                CurrentExportContent = result.Data;
+                ExportMessage = $"Export ready: {ExportService.GenerateFilename(ExportFormat, start, end)}";
+                ExportSuccess = true;
+            }
+            else
+            {
+                ExportMessage = result.ErrorMessage ?? "Export failed";
+                ExportSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            ExportMessage = $"Error: {ex.Message}";
+            ExportSuccess = false;
+        }
+
+        IsExporting = false;
+    }
+
+    private void CopyToClipboard()
+    {
+        if (string.IsNullOrEmpty(CurrentExportContent))
+        {
+            ExportMessage = "Please export first";
+            ExportSuccess = false;
+            return;
+        }
+        ExportMessage = "Content copied to clipboard";
+        ExportSuccess = true;
+    }
+
+    private async Task SetDateRangeAndFilter(DateTime start, DateTime end)
+    {
+        StartDate = start;
+        EndDate = end;
+        await ApplyFilter();
+    }
+
+    private Task ExportThisMonth() => SetDateRangeAndFilter(
+        new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1), DateTime.Today);
+
+    private Task ExportLastMonth()
+    {
+        var lastMonth = DateTime.Today.AddMonths(-1);
+        return SetDateRangeAndFilter(
+            new DateTime(lastMonth.Year, lastMonth.Month, 1),
+            new DateTime(lastMonth.Year, lastMonth.Month, DateTime.DaysInMonth(lastMonth.Year, lastMonth.Month)));
+    }
+
+    private Task ExportThisYear() => SetDateRangeAndFilter(
+        new DateTime(DateTime.Today.Year, 1, 1), DateTime.Today);
+
+    private Task ExportLast30Days() => SetDateRangeAndFilter(
+        DateTime.Today.AddDays(-30), DateTime.Today);
+
+    private async Task ExportAll()
+    {
+        if (!AllEntries.Any())
+        {
+            FilterMessage = "No entries to export";
+            FilterSuccess = false;
+            return;
+        }
+        await SetDateRangeAndFilter(AllEntries.Min(e => e.Date), AllEntries.Max(e => e.Date));
+    }
+}

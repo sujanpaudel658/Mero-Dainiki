@@ -1,0 +1,325 @@
+@page "/security"
+@using Mero_Dainiki.Services
+@inject ISecurityService SecurityService
+@inject NavigationManager Navigation
+
+<div class="security-container">
+    <!-- Header -->
+    <header class="security-header">
+        <h1 class="header-title">
+            <i class="bi bi-shield-lock"></i> Security & Privacy
+        </h1>
+        <p class="header-subtitle">Protect your journal with PIN protection</p>
+    </header>
+
+    <main class="security-content">
+        <!-- PIN Status Card -->
+        <div class="security-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="bi bi-key"></i> PIN Protection
+                </h3>
+                <div class="pin-status-badge @(PinEnabled ? "status-enabled" : "status-disabled")">
+                    @if (PinEnabled)
+                    {
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Enabled</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-x-circle-fill"></i>
+                        <span>Disabled</span>
+                    }
+                </div>
+            </div>
+
+            <div class="card-content">
+                @if (!PinEnabled)
+                {
+                    <div class="section-block">
+                        <p class="section-description">Set a PIN to protect your journal entries. You'll need to enter your PIN every time you access the app.</p>
+                        
+                        <div class="form-group">
+                            <label class="form-label">New PIN (4+ digits)</label>
+                            <input type="password" 
+                                   class="form-input" 
+                                   placeholder="Enter 4+ digit PIN"
+                                   @bind="NewPin" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Confirm PIN</label>
+                            <input type="password" 
+                                   class="form-input" 
+                                   placeholder="Confirm PIN"
+                                   @bind="ConfirmPin" />
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(Message))
+                        {
+                            <div class="alert @(IsSuccess ? "alert-success" : "alert-danger")">
+                                <i class="bi @(IsSuccess ? "bi-check-circle" : "bi-exclamation-circle")"></i>
+                                <span>@Message</span>
+                            </div>
+                        }
+
+                        <button class="btn btn-primary" @onclick="SetPin" disabled="@IsLoading">
+                            @if (IsLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                            }
+                            Set PIN
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="section-block">
+                        <div class="info-box">
+                            <i class="bi bi-info-circle"></i>
+                            <span>Your journal is protected with a PIN. You can change or remove it below.</span>
+                        </div>
+
+                        <div class="section">
+                            <h4 class="section-title">Change PIN</h4>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Current PIN</label>
+                                <input type="password" 
+                                       class="form-input" 
+                                       placeholder="Enter current PIN"
+                                       @bind="CurrentPin" />
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">New PIN</label>
+                                <input type="password" 
+                                       class="form-input" 
+                                       placeholder="Enter new PIN"
+                                       @bind="NewPin" />
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Confirm New PIN</label>
+                                <input type="password" 
+                                       class="form-input" 
+                                       placeholder="Confirm new PIN"
+                                       @bind="ConfirmPin" />
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(ChangeMessage))
+                            {
+                                <div class="alert @(IsChangeSuccess ? "alert-success" : "alert-danger")">
+                                    <i class="bi @(IsChangeSuccess ? "bi-check-circle" : "bi-exclamation-circle")"></i>
+                                    <span>@ChangeMessage</span>
+                                </div>
+                            }
+
+                            <button class="btn btn-info" @onclick="ChangePin" disabled="@IsLoading">
+                                @if (IsLoading)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                Change PIN
+                            </button>
+                        </div>
+
+                        <div class="section">
+                            <h4 class="section-title">Remove PIN</h4>
+                            <p class="section-description">Disable PIN protection for your journal.</p>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Enter PIN to Confirm</label>
+                                <input type="password" 
+                                       class="form-input" 
+                                       placeholder="Enter your PIN"
+                                       @bind="RemovePin" />
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(RemoveMessage))
+                            {
+                                <div class="alert @(IsRemoveSuccess ? "alert-success" : "alert-danger")">
+                                    <i class="bi @(IsRemoveSuccess ? "bi-check-circle" : "bi-exclamation-circle")"></i>
+                                    <span>@RemoveMessage</span>
+                                </div>
+                            }
+
+                            <button class="btn btn-danger" @onclick="RemovePinAsync" disabled="@IsLoading">
+                                @if (IsLoading)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                Remove PIN
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Privacy Info Card -->
+        <div class="security-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="bi bi-shield-check"></i> Privacy Information
+                </h3>
+            </div>
+            <div class="card-content">
+                <div class="info-item">
+                    <h5><i class="bi bi-lock"></i> Encryption</h5>
+                    <p>PINs are hashed using SHA-256 algorithm. Your journal content is stored locally on your device.</p>
+                </div>
+
+                <div class="info-item">
+                    <h5><i class="bi bi-clock-history"></i> Auto-Lock</h5>
+                    <p>Your journal automatically locks after 30 minutes of inactivity for security.</p>
+                </div>
+
+                <div class="info-item">
+                    <h5><i class="bi bi-cloud-lock"></i> Local Storage</h5>
+                    <p>All data is stored locally. No data is sent to any server.</p>
+                </div>
+
+                <div class="info-item">
+                    <h5><i class="bi bi-exclamation-triangle"></i> Important</h5>
+                    <p>If you forget your PIN, you will not be able to access your journal entries. Keep your PIN safe.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+@code {
+    private bool PinEnabled { get; set; } = false;
+    private string NewPin { get; set; } = string.Empty;
+    private string ConfirmPin { get; set; } = string.Empty;
+    private string CurrentPin { get; set; } = string.Empty;
+    private string RemovePin { get; set; } = string.Empty;
+
+    private string Message { get; set; } = string.Empty;
+    private string ChangeMessage { get; set; } = string.Empty;
+    private string RemoveMessage { get; set; } = string.Empty;
+
+    private bool IsSuccess { get; set; } = false;
+    private bool IsChangeSuccess { get; set; } = false;
+    private bool IsRemoveSuccess { get; set; } = false;
+    private bool IsLoading { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CheckPinStatus();
+    }
+
+    private async Task CheckPinStatus()
+    {
+        var isLocked = await SecurityService.IsJournalLockedAsync();
+        if (isLocked.Success)
+        {
+            PinEnabled = !isLocked.Data; // If locked result is false, PIN is enabled
+        }
+    }
+
+    private async Task SetPin()
+    {
+        IsLoading = true;
+        Message = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(NewPin) || NewPin.Length < 4)
+        {
+            Message = "PIN must be at least 4 characters";
+            IsSuccess = false;
+            IsLoading = false;
+            return;
+        }
+
+        if (NewPin != ConfirmPin)
+        {
+            Message = "PINs do not match";
+            IsSuccess = false;
+            IsLoading = false;
+            return;
+        }
+
+        var result = await SecurityService.SetPinAsync(NewPin);
+        Message = result.ErrorMessage ?? "";
+        IsSuccess = result.Success;
+
+        if (result.Success)
+        {
+            NewPin = string.Empty;
+            ConfirmPin = string.Empty;
+            await CheckPinStatus();
+        }
+
+        IsLoading = false;
+    }
+
+    private async Task ChangePin()
+    {
+        IsLoading = true;
+        ChangeMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(CurrentPin))
+        {
+            ChangeMessage = "Please enter your current PIN";
+            IsChangeSuccess = false;
+            IsLoading = false;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(NewPin) || NewPin.Length < 4)
+        {
+            ChangeMessage = "New PIN must be at least 4 characters";
+            IsChangeSuccess = false;
+            IsLoading = false;
+            return;
+        }
+
+        if (NewPin != ConfirmPin)
+        {
+            ChangeMessage = "New PINs do not match";
+            IsChangeSuccess = false;
+            IsLoading = false;
+            return;
+        }
+
+        var result = await SecurityService.ChangePinAsync(CurrentPin, NewPin);
+        ChangeMessage = result.ErrorMessage ?? "";
+        IsChangeSuccess = result.Success;
+
+        if (result.Success)
+        {
+            CurrentPin = string.Empty;
+            NewPin = string.Empty;
+            ConfirmPin = string.Empty;
+        }
+
+        IsLoading = false;
+    }
+
+    private async Task RemovePinAsync()
+    {
+        IsLoading = true;
+        RemoveMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(RemovePin))
+        {
+            RemoveMessage = "Please enter your PIN to confirm removal";
+            IsRemoveSuccess = false;
+            IsLoading = false;
+            return;
+        }
+
+        var result = await SecurityService.RemovePinAsync(RemovePin);
+        RemoveMessage = result.ErrorMessage ?? "";
+        IsRemoveSuccess = result.Success;
+
+        if (result.Success)
+        {
+            RemovePin = string.Empty;
+            await CheckPinStatus();
+        }
+
+        IsLoading = false;
+    }
+}
