@@ -2,8 +2,9 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: var(--bg-primary);
     overflow: hidden;
+    transition: background 0.3s ease;
 }
 
 /* Header */
@@ -137,7 +138,7 @@
 .label-modern {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #2d3748;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -478,14 +479,14 @@
 }
 
 .btn-cancel-modern {
-    background: white;
-    color: #6b7280;
-    border-color: #d1d5db;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 2px solid var(--border-medium);
 }
 
 .btn-cancel-modern:hover {
-    background: #f3f4f6;
-    border-color: #9ca3af;
+    background: var(--bg-hover);
+    border-color: var(--text-muted);
 }
 
 /* Responsive Design */
@@ -799,4 +800,68 @@
 /* Fix for standard CodeMirror themes inside EasyMDE */
 :global([data-theme="dark"]) .CodeMirror-selected {
     background: #334155 !important;
+}
+
+/* PIN Verification Modal */
+.pin-verification-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-overlay);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.pin-verification-dialog {
+    background: var(--bg-card);
+    border: 1px solid var(--border-medium);
+    border-radius: 20px;
+    padding: 3rem;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+}
+
+.pin-header h3 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.pin-header i {
+    color: var(--primary);
+}
+
+.pin-header p {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.pin-input {
+    background: var(--bg-input) !important;
+    border: 2px solid var(--border-medium) !important;
+    color: var(--text-primary) !important;
+    text-align: center;
+    font-size: 2rem;
+    letter-spacing: 1rem;
+    height: 70px;
+    margin-bottom: 1.5rem;
+}
+
+.pin-input:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 4px var(--primary-glow) !important;
+}
+
+.pin-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }

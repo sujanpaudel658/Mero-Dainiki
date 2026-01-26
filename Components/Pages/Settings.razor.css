@@ -18,20 +18,35 @@
     background-clip: text;
 }
 
-:global(.removed-dark) .display-6 {
-    background: none;
-    -webkit-text-fill-color: var(--text-primary);
-    color: var(--text-primary) !important;
+
+
+/* Theme Selector Customization */
+.theme-selector label {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-selector .btn-check:checked+label {
+    background: var(--gradient-primary) !important;
+    border-color: transparent !important;
+    color: white !important;
+    box-shadow: 0 4px 12px var(--primary-glow);
 }
 
 /* Cards */
 .card {
     background: var(--bg-card) !important;
-    border: 1px solid var(--border-light) !important;
-    border-radius: var(--radius-xl) !important;
-    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-medium) !important;
+    /* Made border more visible */
+    border-radius: var(--radius-lg) !important;
+    box-shadow: var(--shadow-sm);
     transition: all 0.3s ease;
     overflow: hidden;
+    margin-bottom: 2rem;
 }
 
 .card:hover {
@@ -47,14 +62,16 @@
 
 .card-header h5 {
     color: var(--text-primary) !important;
-    font-weight: 600;
+    font-weight: 700;
     margin: 0;
     display: flex;
     align-items: center;
+    font-size: 1.15rem;
 }
 
 .card-header h5 .bi {
     color: var(--primary);
+    font-size: 1.25rem;
 }
 
 .card-body {
@@ -114,21 +131,19 @@
 
 /* Switch Styling */
 .form-check-input {
-    background-color: var(--border-medium) !important;
-    border: none !important;
-    width: 3rem !important;
-    height: 1.5rem !important;
+    background-color: var(--border-strong) !important;
+    /* More visible track */
+    border: 1px solid var(--border-medium) !important;
+    width: 3.25rem !important;
+    height: 1.65rem !important;
     cursor: pointer;
     transition: all 0.25s ease;
 }
 
 .form-check-input:checked {
     background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e") !important;
-}
-
-.form-check-input:focus {
-    box-shadow: 0 0 0 4px var(--primary-glow) !important;
 }
 
 /* Horizontal Rules */
@@ -192,9 +207,7 @@ h6 {
     color: var(--primary) !important;
 }
 
-:global(.removed-dark) .text-primary {
-    color: var(--primary-light) !important;
-}
+
 
 /* Alerts */
 .alert {
@@ -215,13 +228,7 @@ h6 {
     border-left: 4px solid var(--danger) !important;
 }
 
-:global(.removed-dark) .alert-success {
-    color: #4ade80 !important;
-}
 
-:global(.removed-dark) .alert-danger {
-    color: #f87171 !important;
-}
 
 .alert .btn-close {
     filter: none;
@@ -232,40 +239,7 @@ h6 {
     opacity: 1;
 }
 
-/* Dark Mode Specific Adjustments */
-:global(.removed-dark) .card {
-    background: var(--bg-card) !important;
-    border-color: var(--border-light) !important;
-}
 
-:global(.removed-dark) .card-header {
-    background: var(--bg-tertiary) !important;
-    border-bottom-color: var(--border-light) !important;
-}
-
-:global(.removed-dark) .card-body {
-    background: var(--bg-card) !important;
-}
-
-:global(.removed-dark) .btn-outline-primary {
-    color: var(--primary-light) !important;
-    border-color: var(--primary-light) !important;
-}
-
-:global(.removed-dark) .btn-outline-primary:hover {
-    background-color: var(--primary-light) !important;
-    color: white !important;
-}
-
-:global(.removed-dark) .btn-outline-danger {
-    color: #f87171 !important;
-    border-color: #f87171 !important;
-}
-
-:global(.removed-dark) .btn-outline-danger:hover {
-    background-color: #f87171 !important;
-    color: white !important;
-}
 
 /* Responsive */
 @media (max-width: 992px) {

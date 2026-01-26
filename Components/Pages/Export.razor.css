@@ -105,7 +105,9 @@
 
 .form-input {
     padding: 0.75rem 1rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-medium);
+    background: var(--bg-input);
+    color: var(--text-primary);
     border-radius: 8px;
     font-size: 0.95rem;
     transition: all 0.2s ease;
@@ -364,136 +366,7 @@
     font-size: 1.5rem;
 }
 
-/* Light Mode */
-:global(html.light) .export-container {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
-}
-
-:global(html.light) .export-card {
-    background: #ffffff !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
-}
-
-:global(html.light) .card-header {
-    background: #f8f9fa !important;
-    border-bottom-color: #e9ecef !important;
-}
-
-:global(html.light) .card-title {
-    color: #1a202c !important;
-}
-
-:global(html.light) .form-label {
-    color: #4a5568 !important;
-}
-
-:global(html.light) .form-input {
-    background: #ffffff !important;
-    border-color: #e2e8f0 !important;
-    color: #1a202c !important;
-}
-
-:global(html.light) .results-header h4 {
-    color: #1a202c !important;
-}
-
-:global(html.light) .stat {
-    background: #ffffff !important;
-    border: 1px solid #e2e8f0 !important;
-}
-
-:global(html.light) .stat-label {
-    color: #4a5568 !important;
-}
-
-:global(html.light) .export-formats h4 {
-    color: #1a202c !important;
-}
-
-:global(html.light) .format-card {
-    border-color: #e2e8f0 !important;
-    background: #ffffff !important;
-}
-
-:global(html.light) .format-info h5 {
-    color: #1a202c !important;
-}
-
-:global(html.light) .format-info p {
-    color: #4a5568 !important;
-}
-
-/* Dark Mode */
-/* Dark Mode */
-:global(html.dark) .export-container {
-    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
-}
-
-:global(html.dark) .export-card {
-    background: #171717;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-:global(html.dark) .card-header {
-    background: #0a0a0a;
-    border-bottom-color: #404040;
-}
-
-:global(html.dark) .card-title {
-    color: #f5f5f5;
-}
-
-:global(html.dark) .form-label {
-    color: #a3a3a3;
-}
-
-:global(html.dark) .form-input {
-    background: #0a0a0a;
-    border-color: #404040;
-    color: #f5f5f5;
-}
-
-:global(html.dark) .form-input:focus {
-    border-color: #10b981;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-}
-
-:global(html.dark) .results-header h4 {
-    color: #f5f5f5;
-}
-
-:global(html.dark) .stat {
-    background: #0a0a0a;
-    border: 1px solid #404040;
-}
-
-:global(html.dark) .stat-label {
-    color: #a3a3a3;
-}
-
-:global(html.dark) .export-formats h4 {
-    color: #f5f5f5;
-}
-
-:global(html.dark) .format-card {
-    border-color: #404040;
-}
-
-:global(html.dark) .format-card:hover {
-    border-color: #10b981;
-}
-
-:global(html.dark) .format-card.selected {
-    background: rgba(16, 185, 129, 0.1);
-}
-
-:global(html.dark) .format-info h5 {
-    color: #f5f5f5;
-}
-
-:global(html.dark) .format-info p {
-    color: #a3a3a3;
-}
+/* End of export styles */
 
 /* Responsive */
 @media (max-width: 768px) {
