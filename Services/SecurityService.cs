@@ -19,19 +19,42 @@ namespace Mero_Dainiki.Services
         Task<ServiceResult<bool>> IsJournalLockedAsync();
         Task<ServiceResult<bool>> UnlockJournalAsync(string pin);
         Task<ServiceResult<bool>> LockJournalAsync();
+        Task<ServiceResult<bool>> HasPinAsync();
+        bool IsUnlocked { get; }
+        void ResetUnlockState();
     }
 
-    public class SecurityService : ISecurityService
+    public class SecurityService : BaseService, ISecurityService
     {
-        private readonly AppDbContext _context;
-        private bool _isJournalLocked = false;
-        private DateTime? _lockTime = null;
-        private const int LOCK_TIMEOUT_MINUTES = 30;
-        private int _currentUserId = 1; 
+        // Track unlock state per session - default is LOCKED (true means unlocked)
+        private static bool _isSessionUnlocked = false;
+        private static DateTime? _unlockTime = null;
+        private const int UNLOCK_TIMEOUT_MINUTES = 30;
+        
+        // Public property to check if journal is currently unlocked
+        public bool IsUnlocked => _isSessionUnlocked && !IsUnlockExpired();
 
-        public SecurityService(AppDbContext context)
+        public SecurityService(AppDbContext context) : base(context) { }
+        
+        private bool IsUnlockExpired()
         {
-            _context = context;
+            if (!_unlockTime.HasValue) return true;
+            return (DateTime.UtcNow - _unlockTime.Value).TotalMinutes > UNLOCK_TIMEOUT_MINUTES;
+        }
+
+        public async Task<ServiceResult<bool>> HasPinAsync()
+        {
+            try
+            {
+                if (!IsUserAuthenticated) return ServiceResult<bool>.Ok(false);
+                
+                var user = await _context.Users.FindAsync(CurrentUserId);
+                return ServiceResult<bool>.Ok(!string.IsNullOrEmpty(user?.Pin));
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.Fail(ex.Message);
+            }
         }
 
         public async Task<ServiceResult<bool>> SetPinAsync(string pin)
@@ -39,21 +62,22 @@ namespace Mero_Dainiki.Services
             try
             {
                 if (string.IsNullOrWhiteSpace(pin) || pin.Length < 4)
-                    return new ServiceResult<bool> { Success = false, ErrorMessage = "PIN must be at least 4 characters" };
+                    return ServiceResult<bool>.Fail("PIN must be at least 4 characters.");
 
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == _currentUserId);
-                if (user == null)
-                    return new ServiceResult<bool> { Success = false, ErrorMessage = "User not found" };
+                if (!IsUserAuthenticated) return ServiceResult<bool>.Fail("Unauthorized.");
 
-                user.Pin = HashPin(pin);
+                var user = await _context.Users.FindAsync(CurrentUserId);
+                if (user == null) return ServiceResult<bool>.Fail("User not found.");
+
+                user.Pin = SecurityUtils.HashString(pin);
                 _context.Users.Update(user);
                 await _context.SaveChangesAsync();
 
-                return new ServiceResult<bool> { Success = true, Data = true };
+                return ServiceResult<bool>.Ok(true);
             }
             catch (Exception ex)
             {
-                return new ServiceResult<bool> { Success = false, ErrorMessage = $"Error setting PIN: {ex.Message}" };
+                return ServiceResult<bool>.Fail($"Error: {ex.Message}");
             }
         }
 
@@ -61,43 +85,28 @@ namespace Mero_Dainiki.Services
         {
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == _currentUserId);
-                if (user == null)
-                    return new ServiceResult<bool> { Success = false, ErrorMessage = "User not found" };
+                if (!IsUserAuthenticated) return ServiceResult<bool>.Fail("Unauthorized.");
 
-                if (string.IsNullOrWhiteSpace(user.Pin))
-                    return new ServiceResult<bool> { Success = false, ErrorMessage = "No PIN set" };
+                var user = await _context.Users.FindAsync(CurrentUserId);
+                if (user == null) return ServiceResult<bool>.Fail("User not found.");
 
-                var pinHash = HashPin(pin);
-                bool isValid = user.Pin == pinHash;
+                if (string.IsNullOrWhiteSpace(user.Pin)) return ServiceResult<bool>.Fail("No PIN set.");
 
-                return new ServiceResult<bool> 
-                { 
-                    Success = isValid, 
-                    Data = isValid, 
-                    ErrorMessage = isValid ? null : "Invalid PIN" 
-                };
+                bool isValid = SecurityUtils.VerifyHash(pin, user.Pin);
+                return isValid ? ServiceResult<bool>.Ok(true) : ServiceResult<bool>.Fail("Invalid PIN.");
             }
             catch (Exception ex)
             {
-                return new ServiceResult<bool> { Success = false, ErrorMessage = $"Error verifying PIN: {ex.Message}" };
+                return ServiceResult<bool>.Fail($"Error: {ex.Message}");
             }
         }
 
         public async Task<ServiceResult<bool>> ChangePinAsync(string oldPin, string newPin)
         {
-            try
-            {
-                var verifyResult = await VerifyPinAsync(oldPin);
-                if (!verifyResult.Success)
-                    return new ServiceResult<bool> { Success = false, ErrorMessage = "Current PIN is incorrect" };
+            var verifyResult = await VerifyPinAsync(oldPin);
+            if (!verifyResult.Success) return verifyResult;
 
-                return await SetPinAsync(newPin);
-            }
-            catch (Exception ex)
-            {
-                return new ServiceResult<bool> { Success = false, ErrorMessage = $"Error changing PIN: {ex.Message}" };
-            }
+            return await SetPinAsync(newPin);
         }
 
         public async Task<ServiceResult<bool>> RemovePinAsync(string pin)
@@ -105,25 +114,21 @@ namespace Mero_Dainiki.Services
             try
             {
                 var verifyResult = await VerifyPinAsync(pin);
-                if (!verifyResult.Success)
-                    return new ServiceResult<bool> { Success = false, ErrorMessage = "PIN is incorrect" };
+                if (!verifyResult.Success) return verifyResult;
 
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == _currentUserId);
-                if (user == null)
-                    return new ServiceResult<bool> { Success = false, ErrorMessage = "User not found" };
+                var user = await _context.Users.FindAsync(CurrentUserId);
+                if (user == null) return ServiceResult<bool>.Fail("User not found.");
 
                 user.Pin = null;
                 _context.Users.Update(user);
                 await _context.SaveChangesAsync();
 
-                _isJournalLocked = false;
-                _lockTime = null;
-
-                return new ServiceResult<bool> { Success = true, Data = true };
+                ResetUnlockState();
+                return ServiceResult<bool>.Ok(true);
             }
             catch (Exception ex)
             {
-                return new ServiceResult<bool> { Success = false, ErrorMessage = $"Error removing PIN: {ex.Message}" };
+                return ServiceResult<bool>.Fail($"Error: {ex.Message}");
             }
         }
 
@@ -131,24 +136,17 @@ namespace Mero_Dainiki.Services
         {
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == _currentUserId);
-                if (user == null || string.IsNullOrWhiteSpace(user.Pin))
-                    return new ServiceResult<bool> { Success = true, Data = false };
+                if (!IsUserAuthenticated) return ServiceResult<bool>.Ok(false);
 
-                if (_isJournalLocked && _lockTime.HasValue)
-                {
-                    if ((DateTime.UtcNow - _lockTime.Value).TotalMinutes > LOCK_TIMEOUT_MINUTES)
-                    {
-                        _isJournalLocked = true;
-                        _lockTime = DateTime.UtcNow;
-                    }
-                }
+                var user = await _context.Users.FindAsync(CurrentUserId);
+                if (user == null || string.IsNullOrWhiteSpace(user.Pin)) return ServiceResult<bool>.Ok(false);
 
-                return new ServiceResult<bool> { Success = true, Data = _isJournalLocked };
+                bool isLocked = !_isSessionUnlocked || IsUnlockExpired();
+                return ServiceResult<bool>.Ok(isLocked);
             }
             catch (Exception ex)
             {
-                return new ServiceResult<bool> { Success = false, ErrorMessage = $"Error checking lock status: {ex.Message}" };
+                return ServiceResult<bool>.Fail($"Error: {ex.Message}");
             }
         }
 
@@ -157,17 +155,16 @@ namespace Mero_Dainiki.Services
             try
             {
                 var verifyResult = await VerifyPinAsync(pin);
-                if (!verifyResult.Success)
-                    return new ServiceResult<bool> { Success = false, ErrorMessage = "Invalid PIN" };
+                if (!verifyResult.Success) return verifyResult;
 
-                _isJournalLocked = false;
-                _lockTime = null;
+                _isSessionUnlocked = true;
+                _unlockTime = DateTime.UtcNow;
 
-                return new ServiceResult<bool> { Success = true, Data = true };
+                return ServiceResult<bool>.Ok(true);
             }
             catch (Exception ex)
             {
-                return new ServiceResult<bool> { Success = false, ErrorMessage = $"Error unlocking journal: {ex.Message}" };
+                return ServiceResult<bool>.Fail($"Error: {ex.Message}");
             }
         }
 
@@ -175,28 +172,25 @@ namespace Mero_Dainiki.Services
         {
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == _currentUserId);
-                if (user == null || string.IsNullOrWhiteSpace(user.Pin))
-                    return new ServiceResult<bool> { Success = false, ErrorMessage = "No PIN set" };
+                if (!IsUserAuthenticated) return ServiceResult<bool>.Fail("Unauthorized.");
 
-                _isJournalLocked = true;
-                _lockTime = DateTime.UtcNow;
+                var user = await _context.Users.FindAsync(CurrentUserId);
+                if (user == null || string.IsNullOrWhiteSpace(user.Pin)) return ServiceResult<bool>.Fail("No PIN set.");
 
-                return new ServiceResult<bool> { Success = true, Data = true };
+                ResetUnlockState();
+                return ServiceResult<bool>.Ok(true);
             }
             catch (Exception ex)
             {
-                return new ServiceResult<bool> { Success = false, ErrorMessage = $"Error locking journal: {ex.Message}" };
+                return ServiceResult<bool>.Fail($"Error: {ex.Message}");
             }
         }
-
-        private string HashPin(string pin)
+        
+        public void ResetUnlockState()
         {
-            using (var sha256 = SHA256.Create())
-            {
-                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(pin));
-                return Convert.ToBase64String(hashedBytes);
-            }
+            _isSessionUnlocked = false;
+            _unlockTime = null;
         }
     }
 }
+
