@@ -3,11 +3,13 @@
 @using Mero_Dainiki.Entities
 @inject IJournalService JournalService
 @inject IExportService ExportService
+@inject IJSRuntime JSRuntime
 
+<Mero_Dainiki.Components.Shared.AuthGuard>
 <div class="export-container">
     <header class="export-header">
         <h1><i class="bi bi-download"></i> Export Journals</h1>
-        <p>Export your entries as HTML or Markdown</p>
+        <p>Export your entries as HTML, Markdown, or PDF</p>
     </header>
 
     <main class="export-content">
@@ -84,6 +86,13 @@
                                     <h5>Markdown</h5>
                                     <p>Plain text, easy to edit</p>
                                 </div>
+
+                                <div class="format-card @(ExportFormat == "pdf" ? "selected" : "")" 
+                                     @onclick='() => ExportFormat = "pdf"'>
+                                    <i class="bi bi-file-pdf"></i>
+                                    <h5>PDF</h5>
+                                    <p>Professional document format</p>
+                                </div>
                             </div>
                         </div>
 
@@ -91,7 +100,7 @@
                             <button class="btn btn-success" @onclick="ExportNow" disabled="@IsExporting">
                                 <i class="bi bi-download"></i> @(IsExporting ? "Exporting..." : "Export Now")
                             </button>
-                            <button class="btn btn-secondary" @onclick="CopyToClipboard" disabled="@IsExporting">
+                            <button class="btn btn-secondary" @onclick="CopyToClipboard" disabled="@(IsExporting || ExportFormat == "pdf")">
                                 <i class="bi bi-clipboard"></i> Copy to Clipboard
                             </button>
                         </div>
@@ -133,6 +142,7 @@
         </div>
     </main>
 </div>
+</Mero_Dainiki.Components.Shared.AuthGuard>
 
 @code {
     // State
@@ -152,9 +162,14 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var result = await JournalService.GetEntriesAsync(10000);
+        // Load all entries - pass page=1 and pageSize=10000
+        var result = await JournalService.GetEntriesAsync(1, 10000);
         if (result.Success && result.Data != null)
+        {
             AllEntries = result.Data;
+            // Auto-apply filter on load to show entries immediately
+            await ApplyFilter();
+        }
     }
 
     private Task ApplyFilter()
@@ -199,21 +214,52 @@
         {
             var start = DateOnly.FromDateTime(StartDate);
             var end = DateOnly.FromDateTime(EndDate);
-            
-            var result = ExportFormat == "html"
-                ? await ExportService.ExportToHtmlAsync(FilteredEntries, start, end)
-                : await ExportService.ExportToMarkdownAsync(FilteredEntries, start, end);
 
-            if (result.Success && result.Data != null)
+            if (ExportFormat == "pdf")
             {
-                CurrentExportContent = result.Data;
-                ExportMessage = $"Export ready: {ExportService.GenerateFilename(ExportFormat, start, end)}";
-                ExportSuccess = true;
+                var result = await ExportService.ExportToPdfAsync(FilteredEntries, start, end);
+                if (result.Success && result.Data != null)
+                {
+                    var fileName = ExportService.GenerateFilename("pdf", start, end);
+                    using var stream = new MemoryStream(result.Data);
+                    using var streamRef = new DotNetStreamReference(stream);
+                    await JSRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+                    ExportMessage = $"PDF downloaded: {fileName}";
+                    ExportSuccess = true;
+                    CurrentExportContent = ""; // Clear content as PDF is binary
+                }
+                else
+                {
+                    ExportMessage = result.ErrorMessage ?? "PDF export failed";
+                    ExportSuccess = false;
+                }
             }
             else
             {
-                ExportMessage = result.ErrorMessage ?? "Export failed";
-                ExportSuccess = false;
+                var result = ExportFormat == "html"
+                    ? await ExportService.ExportToHtmlAsync(FilteredEntries, start, end)
+                    : await ExportService.ExportToMarkdownAsync(FilteredEntries, start, end);
+
+                if (result.Success && result.Data != null)
+                {
+                    CurrentExportContent = result.Data;
+                    var fileName = ExportService.GenerateFilename(ExportFormat, start, end);
+                    
+                    // Convert content to Base64 for download
+                    var bytes = System.Text.Encoding.UTF8.GetBytes(result.Data);
+                    var base64 = Convert.ToBase64String(bytes);
+                    var mimeType = ExportFormat == "html" ? "text/html" : "text/markdown";
+                    
+                    await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", fileName, base64, mimeType);
+                    
+                    ExportMessage = $"Export downloaded: {fileName}";
+                    ExportSuccess = true;
+                }
+                else
+                {
+                    ExportMessage = result.ErrorMessage ?? "Export failed";
+                    ExportSuccess = false;
+                }
             }
         }
         catch (Exception ex)

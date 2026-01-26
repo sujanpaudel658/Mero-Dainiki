@@ -1,6 +1,7 @@
 @page "/settings"
 @using Mero_Dainiki.Services
 
+<Mero_Dainiki.Components.Shared.AuthGuard>
 <div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col-12">
@@ -38,8 +39,7 @@
                             <input class="form-check-input" type="checkbox" role="switch" 
                                    id="darkModeSwitch" 
                                    checked="@IsDarkMode"
-                                   @onchange="ToggleDarkMode"
-                                   style="width: 3rem; height: 1.5rem;">
+                                   @onchange="ToggleDarkMode">
                         </div>
                     </div>
                     <hr />
@@ -69,7 +69,7 @@
                             <p class="text-muted mb-0 small">Get reminded to write your journal</p>
                         </div>
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" checked="@DailyReminderEnabled" @onchange="ToggleDailyReminder" style="width: 3rem; height: 1.5rem;">
+                            <input class="form-check-input" type="checkbox" role="switch" checked="@DailyReminderEnabled" @onchange="ToggleDailyReminder">
                         </div>
                     </div>
                     <hr />
@@ -95,7 +95,7 @@
                             <p class="text-muted mb-0 small">Protect your journal with a PIN</p>
                         </div>
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" checked="@PinEnabled" @onchange="TogglePinProtection" style="width: 3rem; height: 1.5rem;">
+                            <input class="form-check-input" type="checkbox" role="switch" checked="@PinEnabled" @onchange="TogglePinProtection">
                         </div>
                     </div>
                 </div>
@@ -137,14 +137,15 @@
                         <i class="bi bi-person-circle display-1 text-primary"></i>
                     </div>
                     <h5>User Profile</h5>
-                    <p class="text-muted">user@example.com</p>
+                    <p class="text-muted">@UserEmail</p>
                     <button class="btn btn-outline-primary w-100 mb-2">Edit Profile</button>
-                    <button class="btn btn-outline-danger w-100">Sign Out</button>
+                    <button class="btn btn-outline-danger w-100" @onclick="SignOut">Sign Out</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
+</Mero_Dainiki.Components.Shared.AuthGuard>
 
 @code {
     [Inject]
@@ -154,7 +155,13 @@
     private ISecurityService SecurityService { get; set; } = default!;
     
     [Inject]
+    private IUserService UserService { get; set; } = default!;
+    
+    [Inject]
     private IJSRuntime JS { get; set; } = default!;
+    
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
 
     private bool IsDarkMode { get; set; } = false;
     private string FontSize { get; set; } = "Medium";
@@ -163,13 +170,25 @@
     private bool PinEnabled { get; set; } = false;
     private string SettingsMessage { get; set; } = string.Empty;
     private bool IsSettingsSuccess { get; set; } = false;
+    private string UserEmail { get; set; } = string.Empty;
+    private string Username { get; set; } = string.Empty;
+
+@using Mero_Dainiki.Entities
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            var savedTheme = await ThemeService.GetThemeAsync();
-            IsDarkMode = savedTheme == "dark";
+            await ThemeService.InitializeThemeAsync();
+            IsDarkMode = ThemeService.CurrentTheme == ThemeMode.Dark;
+            
+            // Load user info from database (rest of the code unchanged)
+            var user = await UserService.GetCurrentUserAsync();
+            if (user != null)
+            {
+                UserEmail = user.Email;
+                Username = user.Username;
+            }
             
             // Load other settings from localStorage
             FontSize = await JS.InvokeAsync<string>("localStorage.getItem", "fontSize") ?? "Medium";
@@ -180,13 +199,23 @@
             StateHasChanged();
         }
     }
+    
+    private void SignOut()
+    {
+        // Clear MAUI Preferences (this is where auth data is stored)
+        Preferences.Default.Remove("current_user_id");
+        
+        // Reset security service unlock state
+        SecurityService.ResetUnlockState();
+        
+        Navigation.NavigateTo("/login", true);
+    }
 
     private async Task ToggleDarkMode(ChangeEventArgs e)
     {
         IsDarkMode = (bool)(e.Value ?? false);
-        var theme = IsDarkMode ? "dark" : "light";
-        await ThemeService.SaveThemeAsync(theme);
-        await JS.InvokeVoidAsync("themeManager.setTheme", theme);
+        var theme = IsDarkMode ? ThemeMode.Dark : ThemeMode.Light;
+        await ThemeService.SetThemeAsync(theme);
         ShowSettingsMessage("Theme updated successfully", true);
     }
 

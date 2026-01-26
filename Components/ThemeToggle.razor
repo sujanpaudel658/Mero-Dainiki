@@ -1,0 +1,39 @@
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+
+<button class="btn btn-outline-secondary" @onclick="ToggleTheme">@ButtonLabel</button>
+
+@code {
+    private string ButtonLabel = "Dark";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var theme = await JS.InvokeAsync<string>("themeManager.getTheme");
+            ButtonLabel = theme == "dark" ? "Light" : "Dark";
+        }
+        catch
+        {
+            ButtonLabel = "Dark";
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        try
+        {
+            var newTheme = await JS.InvokeAsync<string>("themeManager.toggleBsTheme");
+            ButtonLabel = newTheme == "dark" ? "Light" : "Dark";
+            StateHasChanged();
+        }
+        catch
+        {
+            // Fallback to generic toggle
+            await JS.InvokeVoidAsync("themeManager.toggleTheme");
+            var theme = await JS.InvokeAsync<string>("themeManager.getTheme");
+            ButtonLabel = theme == "dark" ? "Light" : "Dark";
+            StateHasChanged();
+        }
+    }
+}

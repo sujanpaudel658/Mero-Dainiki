@@ -1,27 +1,72 @@
+using Microsoft.JSInterop;
+using Mero_Dainiki.Entities;
+
 namespace Mero_Dainiki.Services
 {
+    // ThemeMode is defined in Mero_Dainiki.Entities
+
+
     public interface IThemeService
     {
-        Task<string> GetThemeAsync();
-        Task SaveThemeAsync(string theme);
+        ThemeMode CurrentTheme { get; }
+        Task InitializeThemeAsync();
+        Task SetThemeAsync(ThemeMode theme);
+        Task ToggleThemeAsync();
+        event Action? OnThemeChanged;
     }
 
     public class ThemeService : IThemeService
     {
-        private readonly string _preferencesKey = "app_theme";
+        private readonly IJSRuntime _jsRuntime;
+        
+        public ThemeMode CurrentTheme { get; private set; } = ThemeMode.Light;
+        public event Action? OnThemeChanged;
 
-        public Task<string> GetThemeAsync()
+        public ThemeService(IJSRuntime jsRuntime)
         {
-            // Get theme from platform preferences (persisted storage)
-            var theme = Preferences.Default.Get(_preferencesKey, "light");
-            return Task.FromResult(theme);
+            _jsRuntime = jsRuntime;
         }
 
-        public Task SaveThemeAsync(string theme)
+        public async Task InitializeThemeAsync()
         {
-            // Save theme to platform preferences (persisted storage)
-            Preferences.Default.Set(_preferencesKey, theme);
-            return Task.CompletedTask;
+            try
+            {
+                var themeStr = await _jsRuntime.InvokeAsync<string>("themeManager.getTheme");
+                if (Enum.TryParse<ThemeMode>(themeStr, true, out var theme))
+                {
+                    CurrentTheme = theme;
+                }
+                else
+                {
+                    CurrentTheme = ThemeMode.Light;
+                }
+                NotifyStateChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error initializing theme: {ex.Message}");
+            }
         }
+
+        public async Task SetThemeAsync(ThemeMode theme)
+        {
+            CurrentTheme = theme;
+            
+            // Map Enum to string expected by JS
+            var themeStr = theme.ToString().ToLower();
+            
+            // Allow JS to handle the DOM update and persistence
+            await _jsRuntime.InvokeVoidAsync("themeManager.setTheme", themeStr);
+            
+            NotifyStateChanged();
+        }
+
+        public async Task ToggleThemeAsync()
+        {
+            var newTheme = CurrentTheme == ThemeMode.Dark ? ThemeMode.Light : ThemeMode.Dark;
+            await SetThemeAsync(newTheme);
+        }
+
+        private void NotifyStateChanged() => OnThemeChanged?.Invoke();
     }
 }

@@ -252,63 +252,74 @@
 }
 
 /* Dark Mode */
-@media (prefers-color-scheme: dark) {
-    .calendar-modern-container {
-        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
-    }
+:global(html.dark) .calendar-modern-container {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+}
 
-    .calendar-title h1,
-    .month-year {
-        color: #e2e8f0;
-    }
+:global(html.dark) .calendar-title h1,
+:global(html.dark) .month-year {
+    color: #f5f5f5;
+}
 
-    .calendar-title p {
-        color: #cbd5e1;
-    }
+:global(html.dark) .calendar-title p {
+    color: #a3a3a3;
+}
 
-    .day-header {
-        color: #a5f3fc;
-    }
+:global(html.dark) .day-header {
+    color: #818cf8;
+}
 
-    .calendar-grid-modern {
-        background: #2d3748;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
+:global(html.dark) .calendar-grid-modern {
+    background: rgba(26, 26, 26, 0.95);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(64, 64, 64, 0.5);
+}
 
-    .calendar-day {
-        background: #1a202c;
-        border-color: #4a5568;
-        color: #cbd5e1;
-    }
+:global(html.dark) .calendar-day {
+    background: rgba(38, 38, 38, 0.95);
+    border-color: rgba(64, 64, 64, 0.5);
+    color: #a3a3a3;
+}
 
-    .calendar-day:hover:not(.is-future) {
-        background: #2d3748;
-        border-color: #8b5cf6;
-    }
+:global(html.dark) .calendar-day:hover:not(.is-future) {
+    background: rgba(50, 50, 50, 0.95);
+    border-color: #818cf8;
+}
 
-    .day-number {
-        color: #e2e8f0;
-    }
+:global(html.dark) .day-number {
+    color: #f5f5f5;
+}
 
-    .calendar-day.is-today {
-        background: #7c3aed;
-        border-color: #a78bfa;
-    }
+:global(html.dark) .calendar-day.is-today {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border-color: #818cf8;
+}
 
-    .calendar-day.is-today .day-number {
-        color: #fef3c7;
-    }
+:global(html.dark) .calendar-day.is-today .day-number {
+    color: #fff;
+}
 
-    .stat-box {
-        background: #2d3748;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
+:global(html.dark) .stat-box {
+    background: rgba(26, 26, 26, 0.95);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(64, 64, 64, 0.5);
+}
 
-    .stat-label {
-        color: #cbd5e1;
-    }
+:global(html.dark) .stat-label {
+    color: #a3a3a3;
+}
 
-    .stat-value {
-        color: #a5f3fc;
-    }
+:global(html.dark) .stat-value {
+    color: #818cf8;
+}
+
+:global(html.dark) .btn-calendar-nav {
+    background: rgba(38, 38, 38, 0.95);
+    border-color: #818cf8;
+    color: #818cf8;
+}
+
+:global(html.dark) .btn-calendar-nav:hover {
+    background: #6366f1;
+    color: #fff;
 }

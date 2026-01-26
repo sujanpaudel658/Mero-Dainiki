@@ -5,6 +5,7 @@
 @inject ITagService TagService
 @inject NavigationManager NavigationManager
 
+<Mero_Dainiki.Components.Shared.AuthGuard>
 <div class="browse-modern-container">
     <div class="browse-header">
         <h1><i class="bi bi-book me-2"></i>Browse Journal</h1>
@@ -160,6 +161,7 @@
         <div class="alert-error">@ErrorMessage</div>
     }
 </div>
+</Mero_Dainiki.Components.Shared.AuthGuard>
 
 @code {
     private string SearchText = "";
@@ -319,9 +321,11 @@
 
     private string GetMoodEmoji(Mood mood) => mood switch
     {
+        Mood.VeryHappy => "😄",
         Mood.Happy => "😊",
         Mood.Neutral => "😐",
         Mood.Sad => "😢",
+        Mood.VerySad => "😭",
         _ => "😐"
     };
 }

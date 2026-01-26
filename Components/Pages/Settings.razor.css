@@ -1,0 +1,304 @@
+/* ==========================================
+   SETTINGS PAGE - THEME-AWARE DESIGN
+   ========================================== */
+
+/* Container */
+.container-fluid {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Settings Page Header */
+.display-6 {
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+:global(.removed-dark) .display-6 {
+    background: none;
+    -webkit-text-fill-color: var(--text-primary);
+    color: var(--text-primary) !important;
+}
+
+/* Cards */
+.card {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-light) !important;
+    border-radius: var(--radius-xl) !important;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.card-header {
+    background: var(--bg-tertiary) !important;
+    border-bottom: 1px solid var(--border-light) !important;
+    color: var(--text-primary) !important;
+    padding: 1.25rem 1.5rem;
+}
+
+.card-header h5 {
+    color: var(--text-primary) !important;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.card-header h5 .bi {
+    color: var(--primary);
+}
+
+.card-body {
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    padding: 1.5rem;
+}
+
+.card-body strong {
+    color: var(--text-primary) !important;
+    font-weight: 600;
+}
+
+.card-body .text-muted {
+    color: var(--text-muted) !important;
+}
+
+.card-body p {
+    color: var(--text-secondary) !important;
+    margin-bottom: 0;
+}
+
+/* Setting Items */
+.d-flex.justify-content-between {
+    padding: 0.5rem 0;
+}
+
+/* Form Controls */
+.form-select {
+    background-color: var(--bg-input) !important;
+    border: 2px solid var(--border-medium) !important;
+    color: var(--text-primary) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 0.625rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.form-select:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 4px var(--primary-glow) !important;
+}
+
+.form-control {
+    background-color: var(--bg-input) !important;
+    border: 2px solid var(--border-medium) !important;
+    color: var(--text-primary) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 0.625rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 4px var(--primary-glow) !important;
+}
+
+/* Switch Styling */
+.form-check-input {
+    background-color: var(--border-medium) !important;
+    border: none !important;
+    width: 3rem !important;
+    height: 1.5rem !important;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary) !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e") !important;
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 4px var(--primary-glow) !important;
+}
+
+/* Horizontal Rules */
+hr {
+    border-color: var(--border-light) !important;
+    margin: 1rem 0;
+    opacity: 1;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--text-primary) !important;
+}
+
+/* Buttons */
+.btn-outline-primary {
+    color: var(--primary) !important;
+    border: 2px solid var(--primary) !important;
+    background: transparent !important;
+    border-radius: var(--radius-md) !important;
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+    transition: all 0.25s ease;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary) !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.btn-outline-danger {
+    color: var(--danger) !important;
+    border: 2px solid var(--danger) !important;
+    background: transparent !important;
+    border-radius: var(--radius-md) !important;
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+    transition: all 0.25s ease;
+}
+
+.btn-outline-danger:hover {
+    background: var(--danger) !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* User Profile Card */
+.bi-person-circle {
+    color: var(--primary) !important;
+}
+
+.text-primary {
+    color: var(--primary) !important;
+}
+
+:global(.removed-dark) .text-primary {
+    color: var(--primary-light) !important;
+}
+
+/* Alerts */
+.alert {
+    border-radius: var(--radius-lg) !important;
+    border: none !important;
+    padding: 1rem 1.25rem;
+}
+
+.alert-success {
+    background: var(--success-light) !important;
+    color: var(--success) !important;
+    border-left: 4px solid var(--success) !important;
+}
+
+.alert-danger {
+    background: var(--danger-light) !important;
+    color: var(--danger) !important;
+    border-left: 4px solid var(--danger) !important;
+}
+
+:global(.removed-dark) .alert-success {
+    color: #4ade80 !important;
+}
+
+:global(.removed-dark) .alert-danger {
+    color: #f87171 !important;
+}
+
+.alert .btn-close {
+    filter: none;
+    opacity: 0.6;
+}
+
+.alert .btn-close:hover {
+    opacity: 1;
+}
+
+/* Dark Mode Specific Adjustments */
+:global(.removed-dark) .card {
+    background: var(--bg-card) !important;
+    border-color: var(--border-light) !important;
+}
+
+:global(.removed-dark) .card-header {
+    background: var(--bg-tertiary) !important;
+    border-bottom-color: var(--border-light) !important;
+}
+
+:global(.removed-dark) .card-body {
+    background: var(--bg-card) !important;
+}
+
+:global(.removed-dark) .btn-outline-primary {
+    color: var(--primary-light) !important;
+    border-color: var(--primary-light) !important;
+}
+
+:global(.removed-dark) .btn-outline-primary:hover {
+    background-color: var(--primary-light) !important;
+    color: white !important;
+}
+
+:global(.removed-dark) .btn-outline-danger {
+    color: #f87171 !important;
+    border-color: #f87171 !important;
+}
+
+:global(.removed-dark) .btn-outline-danger:hover {
+    background-color: #f87171 !important;
+    color: white !important;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+
+    .card-body {
+        padding: 1.25rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .card-header {
+        padding: 1rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .form-select,
+    .form-control {
+        width: 100% !important;
+    }
+
+    .btn-outline-primary,
+    .btn-outline-danger {
+        width: 100%;
+    }
+}

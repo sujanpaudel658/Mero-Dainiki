@@ -3,6 +3,7 @@
 @inject ISecurityService SecurityService
 @inject NavigationManager Navigation
 
+<Mero_Dainiki.Components.Shared.AuthGuard>
 <div class="security-container">
     <!-- Header -->
     <header class="security-header">
@@ -188,6 +189,7 @@
         </div>
     </main>
 </div>
+</Mero_Dainiki.Components.Shared.AuthGuard>
 
 @code {
     private bool PinEnabled { get; set; } = false;
@@ -212,10 +214,10 @@
 
     private async Task CheckPinStatus()
     {
-        var isLocked = await SecurityService.IsJournalLockedAsync();
-        if (isLocked.Success)
+        var hasPin = await SecurityService.HasPinAsync();
+        if (hasPin.Success)
         {
-            PinEnabled = !isLocked.Data; // If locked result is false, PIN is enabled
+            PinEnabled = hasPin.Data;
         }
     }
 

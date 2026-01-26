@@ -23,12 +23,13 @@ namespace Mero_Dainiki
             builder.Services.AddDbContext<AppDbContext>();
 
             // Register Services
-            builder.Services.AddSingleton<IThemeService, ThemeService>();
+            builder.Services.AddScoped<IThemeService, ThemeService>();
             builder.Services.AddScoped<IJournalService, JournalService>();
             builder.Services.AddScoped<ITagService, TagService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<ISecurityService, SecurityService>();
             builder.Services.AddScoped<IExportService, ExportService>();
+            builder.Services.AddScoped<IUserService, UserService>();
 
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();

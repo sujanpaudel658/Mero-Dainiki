@@ -61,6 +61,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Markdig" Version="0.44.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0-preview.3.24172.2" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0-preview.3.24172.2">
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -70,6 +71,7 @@
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
+        <PackageReference Include="QuestPDF" Version="2025.12.3" />
     </ItemGroup>
 
 </Project>

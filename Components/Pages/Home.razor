@@ -1,6 +1,7 @@
-﻿@page "/"
+﻿@page "/home"
 @using Mero_Dainiki.Services
 
+<Mero_Dainiki.Components.Shared.AuthGuard>
 <main class="home-page">
     <div class="container py-4">
         <!-- Hero Section -->
@@ -164,6 +165,7 @@
         </div>
     </div>
 </main>
+</Mero_Dainiki.Components.Shared.AuthGuard>
 
 @code {
     [Inject] private NavigationManager? NavigationManager { get; set; }
@@ -233,6 +235,6 @@
 
     private void NavigateToSettings()
     {
-        Console.WriteLine("Settings clicked");
+        NavigationManager?.NavigateTo("/settings");
     }
 }
