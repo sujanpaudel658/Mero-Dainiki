@@ -3,6 +3,7 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JS
 @inject IThemeService ThemeService
+@inject IAuthService AuthService
 
 <div class="app-shell">
     <!-- Premium App Bar -->
@@ -91,12 +92,11 @@
     {
         try
         {
-            var authToken = await JS.InvokeAsync<string>("localStorage.getItem", "authToken");
-            var userId = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
-            // var prefsUserId = Preferences.Default.Get("current_user_id", 0);
+            // Use AuthService's consistent validation logic (Preferences + localStorage fallback + Expiration)
+            var userId = await AuthService.ValidateUserAsync(JS);
+            IsAuthenticated = userId > 0;
             
-            IsAuthenticated = (!string.IsNullOrEmpty(authToken) && !string.IsNullOrEmpty(userId));
-                              // || prefsUserId > 0;
+            // If we are authenticated but at the root path, we might want to redirect (handled in pages)
         }
         catch
         {

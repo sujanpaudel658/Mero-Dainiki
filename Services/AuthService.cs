@@ -28,6 +28,7 @@ namespace Mero_Dainiki.Services
     {
         private readonly AppDbContext _context;
         private const string CurrentUserKey = "current_user_id";
+        private const string AuthExpirationKey = "auth_expiration_date";
 
         public AuthService(AppDbContext context)
         {
@@ -68,8 +69,10 @@ namespace Mero_Dainiki.Services
                 _context.LoginHistories.Add(loginHistory);
                 await _context.SaveChangesAsync();
 
-                // Store user ID in MAUI Preferences
+                // Store user ID and Expiration in MAUI Preferences (7 days)
                 Preferences.Default.Set(CurrentUserKey, user.Id);
+                Preferences.Default.Set(AuthExpirationKey, DateTime.UtcNow.AddDays(7));
+                
                 return ServiceResult<User>.Ok(user);
             }
             catch (Exception ex)
@@ -121,6 +124,8 @@ namespace Mero_Dainiki.Services
                 await _context.SaveChangesAsync();
 
                 Preferences.Default.Set(CurrentUserKey, user.Id);
+                Preferences.Default.Set(AuthExpirationKey, DateTime.UtcNow.AddDays(7));
+                
                 return ServiceResult<User>.Ok(user);
             }
             catch (Exception ex)
@@ -132,26 +137,50 @@ namespace Mero_Dainiki.Services
         public Task<bool> IsAuthenticatedAsync()
         {
             var userId = Preferences.Default.Get(CurrentUserKey, 0);
-            return Task.FromResult(userId > 0);
+            var expiration = Preferences.Default.Get(AuthExpirationKey, DateTime.MinValue);
+            
+            bool isValid = userId > 0 && expiration > DateTime.UtcNow;
+            
+            if (!isValid && userId > 0)
+            {
+                // Session expired, clean up
+                LogoutAsync();
+            }
+            
+            return Task.FromResult(isValid);
         }
 
         public async Task<int> ValidateUserAsync(IJSRuntime js)
         {
             try
             {
+                // First check Preferences (MAUI)
                 var userId = Preferences.Default.Get(CurrentUserKey, 0);
+                var expiration = Preferences.Default.Get(AuthExpirationKey, DateTime.MinValue);
                 
-                // If not in preferences, try localStorage
-                if (userId <= 0)
+                if (userId > 0 && expiration > DateTime.UtcNow)
                 {
-                    var lsUserId = await js.InvokeAsync<string>("localStorage.getItem", "userId");
-                    if (!string.IsNullOrEmpty(lsUserId) && int.TryParse(lsUserId, out userId))
+                    return userId;
+                }
+                
+                // If not in preferences or expired, try localStorage fallback
+                var lsUserIdStr = await js.InvokeAsync<string>("localStorage.getItem", "userId");
+                var lsExpStr = await js.InvokeAsync<string>("localStorage.getItem", "authExpiration");
+                
+                if (!string.IsNullOrEmpty(lsUserIdStr) && int.TryParse(lsUserIdStr, out userId))
+                {
+                    if (!string.IsNullOrEmpty(lsExpStr) && DateTime.TryParse(lsExpStr, out var lsExp) && lsExp > DateTime.UtcNow)
                     {
+                        // Sync back to preferences
                         Preferences.Default.Set(CurrentUserKey, userId);
+                        Preferences.Default.Set(AuthExpirationKey, lsExp);
+                        return userId;
                     }
                 }
                 
-                return userId;
+                // If we reach here, it's either not there or expired
+                if (userId > 0) await LogoutAsync();
+                return 0;
             }
             catch
             {
@@ -162,6 +191,7 @@ namespace Mero_Dainiki.Services
         public Task LogoutAsync()
         {
             Preferences.Default.Remove(CurrentUserKey);
+            Preferences.Default.Remove(AuthExpirationKey);
             return Task.CompletedTask;
         }
     }
