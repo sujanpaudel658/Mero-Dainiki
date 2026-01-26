@@ -126,6 +126,14 @@
     font-weight: 700;
 }
 
+:global(html.dark) .calendar-day.is-today {
+    background: rgba(251, 191, 36, 0.15) !important;
+}
+
+:global(html.dark) .calendar-day.is-today .day-number {
+    color: #fbbf24 !important;
+}
+
 .calendar-day.is-future {
     opacity: 0.5;
     cursor: not-allowed;
