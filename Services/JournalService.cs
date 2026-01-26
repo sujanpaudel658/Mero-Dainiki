@@ -25,14 +25,9 @@ namespace Mero_Dainiki.Services
     /// <summary>
     /// Journal service implementation with EF Core SQLite
     /// </summary>
-    public class JournalService : IJournalService
+    public class JournalService : BaseService, IJournalService
     {
-        private readonly AppDbContext _context;
-
-        public JournalService(AppDbContext context)
-        {
-            _context = context;
-        }
+        public JournalService(AppDbContext context) : base(context) { }
 
         public async Task<ServiceResult<JournalEntry>> GetEntryByDateAsync(DateTime date)
         {
@@ -40,7 +35,7 @@ namespace Mero_Dainiki.Services
             {
                 var entry = await _context.JournalEntries
                     .Include(e => e.Tags)
-                    .FirstOrDefaultAsync(e => e.Date.Date == date.Date);
+                    .FirstOrDefaultAsync(e => e.UserId == CurrentUserId && e.Date.Date == date.Date);
 
                 return entry != null
                     ? ServiceResult<JournalEntry>.Ok(entry)
@@ -48,7 +43,7 @@ namespace Mero_Dainiki.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<JournalEntry>.Fail($"Error retrieving entry: {ex.Message}");
+                return ServiceResult<JournalEntry>.Fail($"Error: {ex.Message}");
             }
         }
 
@@ -58,7 +53,7 @@ namespace Mero_Dainiki.Services
             {
                 var entry = await _context.JournalEntries
                     .Include(e => e.Tags)
-                    .FirstOrDefaultAsync(e => e.Id == id);
+                    .FirstOrDefaultAsync(e => e.UserId == CurrentUserId && e.Id == id);
 
                 return entry != null
                     ? ServiceResult<JournalEntry>.Ok(entry)
@@ -66,7 +61,7 @@ namespace Mero_Dainiki.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<JournalEntry>.Fail($"Error retrieving entry: {ex.Message}");
+                return ServiceResult<JournalEntry>.Fail($"Error: {ex.Message}");
             }
         }
 
@@ -76,6 +71,7 @@ namespace Mero_Dainiki.Services
             {
                 var entries = await _context.JournalEntries
                     .Include(e => e.Tags)
+                    .Where(e => e.UserId == CurrentUserId)
                     .OrderByDescending(e => e.Date)
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
@@ -85,7 +81,7 @@ namespace Mero_Dainiki.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<List<JournalEntry>>.Fail($"Error retrieving entries: {ex.Message}");
+                return ServiceResult<List<JournalEntry>>.Fail($"Error: {ex.Message}");
             }
         }
 
@@ -94,27 +90,16 @@ namespace Mero_Dainiki.Services
         {
             try
             {
-                var query = _context.JournalEntries.Include(e => e.Tags).AsQueryable();
+                var query = _context.JournalEntries.Include(e => e.Tags).Where(e => e.UserId == CurrentUserId).AsQueryable();
 
                 if (!string.IsNullOrWhiteSpace(searchText))
                 {
                     query = query.Where(e => e.Title.Contains(searchText) || e.Content.Contains(searchText));
                 }
 
-                if (startDate.HasValue)
-                {
-                    query = query.Where(e => e.Date >= startDate.Value);
-                }
-
-                if (endDate.HasValue)
-                {
-                    query = query.Where(e => e.Date <= endDate.Value);
-                }
-
-                if (mood.HasValue)
-                {
-                    query = query.Where(e => e.PrimaryMood == mood.Value);
-                }
+                if (startDate.HasValue) query = query.Where(e => e.Date >= startDate.Value);
+                if (endDate.HasValue) query = query.Where(e => e.Date <= endDate.Value);
+                if (mood.HasValue) query = query.Where(e => e.PrimaryMood == mood.Value);
 
                 if (tagIds != null && tagIds.Any())
                 {
@@ -126,7 +111,7 @@ namespace Mero_Dainiki.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<List<JournalEntry>>.Fail($"Error searching entries: {ex.Message}");
+                return ServiceResult<List<JournalEntry>>.Fail($"Error: {ex.Message}");
             }
         }
 
@@ -134,33 +119,28 @@ namespace Mero_Dainiki.Services
         {
             try
             {
-                // Check if entry already exists for this date
-                var existingEntry = await _context.JournalEntries
-                    .FirstOrDefaultAsync(e => e.Date.Date == model.Date.Date);
-
-                if (existingEntry != null)
+                if (await _context.JournalEntries.AnyAsync(e => e.UserId == CurrentUserId && e.Date.Date == model.Date.Date))
                 {
-                    return ServiceResult<JournalEntry>.Fail("An entry already exists for this date. Please edit the existing entry.");
+                    return ServiceResult<JournalEntry>.Fail("An entry already exists for this date.");
                 }
 
                 var entry = new JournalEntry
                 {
+                    UserId = CurrentUserId,
                     Title = model.Title,
                     Content = model.Content,
                     Date = model.Date,
                     PrimaryMood = model.PrimaryMood,
-                    SecondaryMood1 = model.SecondaryMoods.Count > 0 ? model.SecondaryMoods[0] : null,
-                    SecondaryMood2 = model.SecondaryMoods.Count > 1 ? model.SecondaryMoods[1] : null,
+                    SecondaryMood1 = model.SecondaryMoods.ElementAtOrDefault(0),
+                    SecondaryMood2 = model.SecondaryMoods.ElementAtOrDefault(1),
                     Category = model.Category,
                     IsFavorite = model.IsFavorite,
                     CreatedAt = DateTime.UtcNow
                 };
 
-                // Add tags
                 if (model.TagIds.Any())
                 {
-                    var tags = await _context.Tags.Where(t => model.TagIds.Contains(t.Id)).ToListAsync();
-                    entry.Tags = tags;
+                    entry.Tags = await _context.Tags.Where(t => model.TagIds.Contains(t.Id)).ToListAsync();
                 }
 
                 _context.JournalEntries.Add(entry);
@@ -170,7 +150,7 @@ namespace Mero_Dainiki.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<JournalEntry>.Fail($"Error creating entry: {ex.Message}");
+                return ServiceResult<JournalEntry>.Fail($"Error: {ex.Message}");
             }
         }
 
@@ -180,40 +160,30 @@ namespace Mero_Dainiki.Services
             {
                 var entry = await _context.JournalEntries
                     .Include(e => e.Tags)
-                    .FirstOrDefaultAsync(e => e.Id == model.Id);
+                    .FirstOrDefaultAsync(e => e.UserId == CurrentUserId && e.Id == model.Id);
 
-                if (entry == null)
-                {
-                    return ServiceResult<JournalEntry>.Fail("Entry not found.");
-                }
+                if (entry == null) return ServiceResult<JournalEntry>.Fail("Entry not found.");
 
-                // Prevent updating to a date that already has an entry (other than this one)
-                var duplicateDateEntry = await _context.JournalEntries
-                    .FirstOrDefaultAsync(e => e.Date.Date == model.Date.Date && e.Id != model.Id);
-                if (duplicateDateEntry != null)
+                if (await _context.JournalEntries.AnyAsync(e => e.UserId == CurrentUserId && e.Date.Date == model.Date.Date && e.Id != model.Id))
                 {
-                    return ServiceResult<JournalEntry>.Fail("Another entry already exists for this date. Only one entry per day is allowed.");
+                    return ServiceResult<JournalEntry>.Fail("Another entry already exists for this date.");
                 }
 
                 entry.Title = model.Title;
                 entry.Content = model.Content;
                 entry.PrimaryMood = model.PrimaryMood;
-                entry.SecondaryMood1 = model.SecondaryMoods.Count > 0 ? model.SecondaryMoods[0] : null;
-                entry.SecondaryMood2 = model.SecondaryMoods.Count > 1 ? model.SecondaryMoods[1] : null;
+                entry.SecondaryMood1 = model.SecondaryMoods.ElementAtOrDefault(0);
+                entry.SecondaryMood2 = model.SecondaryMoods.ElementAtOrDefault(1);
                 entry.Category = model.Category;
                 entry.IsFavorite = model.IsFavorite;
                 entry.Date = model.Date;
                 entry.UpdatedAt = DateTime.UtcNow;
 
-                // Update tags
                 entry.Tags.Clear();
                 if (model.TagIds.Any())
                 {
                     var tags = await _context.Tags.Where(t => model.TagIds.Contains(t.Id)).ToListAsync();
-                    foreach (var tag in tags)
-                    {
-                        entry.Tags.Add(tag);
-                    }
+                    foreach (var tag in tags) entry.Tags.Add(tag);
                 }
 
                 await _context.SaveChangesAsync();
@@ -221,7 +191,7 @@ namespace Mero_Dainiki.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<JournalEntry>.Fail($"Error updating entry: {ex.Message}");
+                return ServiceResult<JournalEntry>.Fail($"Error: {ex.Message}");
             }
         }
 
@@ -229,11 +199,8 @@ namespace Mero_Dainiki.Services
         {
             try
             {
-                var entry = await _context.JournalEntries.FindAsync(id);
-                if (entry == null)
-                {
-                    return ServiceResult.Fail("Entry not found.");
-                }
+                var entry = await _context.JournalEntries.FirstOrDefaultAsync(e => e.UserId == CurrentUserId && e.Id == id);
+                if (entry == null) return ServiceResult.Fail("Entry not found.");
 
                 _context.JournalEntries.Remove(entry);
                 await _context.SaveChangesAsync();
@@ -241,7 +208,7 @@ namespace Mero_Dainiki.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult.Fail($"Error deleting entry: {ex.Message}");
+                return ServiceResult.Fail($"Error: {ex.Message}");
             }
         }
 
@@ -249,40 +216,26 @@ namespace Mero_Dainiki.Services
         {
             try
             {
-                var entries = await _context.JournalEntries.Include(e => e.Tags).ToListAsync();
+                var entries = await _context.JournalEntries.Include(e => e.Tags).Where(e => e.UserId == CurrentUserId).ToListAsync();
+                if (!entries.Any()) return ServiceResult<MoodAnalyticsModel>.Ok(new MoodAnalyticsModel());
 
                 var analytics = new MoodAnalyticsModel
                 {
                     TotalEntries = entries.Count,
-                    MoodDistribution = entries.GroupBy(e => e.PrimaryMood.ToString())
-                        .ToDictionary(g => g.Key, g => g.Count()),
-                    TagUsage = entries.SelectMany(e => e.Tags)
-                        .GroupBy(t => t.Name)
-                        .ToDictionary(g => g.Key, g => g.Count()),
-                    AverageWordCount = entries.Any()
-                        ? entries.Average(e => e.Content.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length)
-                        : 0,
-                    WordCountTrends = entries.OrderBy(e => e.Date)
-                        .Select(e => new WordCountTrend
-                        {
-                            Date = e.Date,
-                            WordCount = e.Content.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length
-                        }).ToList()
+                    MoodDistribution = entries.GroupBy(e => e.PrimaryMood.ToString()).ToDictionary(g => g.Key, g => g.Count()),
+                    TagUsage = entries.SelectMany(e => e.Tags).GroupBy(t => t.Name).ToDictionary(g => g.Key, g => g.Count()),
+                    AverageWordCount = entries.Average(e => e.Content.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length),
+                    WordCountTrends = entries.OrderBy(e => e.Date).Select(e => new WordCountTrend { 
+                        Date = e.Date, 
+                        WordCount = e.Content.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length 
+                    }).ToList()
                 };
 
-                if (analytics.MoodDistribution.Any())
-                {
-                    analytics.MostFrequentMood = analytics.MoodDistribution.OrderByDescending(x => x.Value).First().Key;
-                }
+                analytics.MostFrequentMood = analytics.MoodDistribution.OrderByDescending(x => x.Value).FirstOrDefault().Key;
+                analytics.MostUsedTag = analytics.TagUsage.OrderByDescending(x => x.Value).FirstOrDefault().Key;
 
-                if (analytics.TagUsage.Any())
-                {
-                    analytics.MostUsedTag = analytics.TagUsage.OrderByDescending(x => x.Value).First().Key;
-                }
-
-                // Calculate streaks
                 var streakResult = await GetStreakAsync();
-                if (streakResult.Success && streakResult.Data != default)
+                if (streakResult.Success)
                 {
                     analytics.CurrentStreak = streakResult.Data.current;
                     analytics.LongestStreak = streakResult.Data.longest;
@@ -292,7 +245,7 @@ namespace Mero_Dainiki.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<MoodAnalyticsModel>.Fail($"Error getting analytics: {ex.Message}");
+                return ServiceResult<MoodAnalyticsModel>.Fail($"Error: {ex.Message}");
             }
         }
 
@@ -301,21 +254,18 @@ namespace Mero_Dainiki.Services
             try
             {
                 var dates = await _context.JournalEntries
+                    .Where(e => e.UserId == CurrentUserId)
                     .Select(e => e.Date.Date)
                     .Distinct()
                     .OrderByDescending(d => d)
                     .ToListAsync();
 
-                if (!dates.Any())
-                {
-                    return ServiceResult<(int, int)>.Ok((0, 0));
-                }
+                if (!dates.Any()) return ServiceResult<(int, int)>.Ok((0, 0));
 
                 int currentStreak = 0;
                 int longestStreak = 0;
                 int tempStreak = 1;
 
-                // Calculate current streak
                 var today = DateTime.Today;
                 if (dates.Contains(today) || dates.Contains(today.AddDays(-1)))
                 {
@@ -329,13 +279,9 @@ namespace Mero_Dainiki.Services
                     }
                 }
 
-                // Calculate longest streak
                 for (int i = 1; i < dates.Count; i++)
                 {
-                    if ((dates[i - 1] - dates[i]).Days == 1)
-                    {
-                        tempStreak++;
-                    }
+                    if ((dates[i - 1] - dates[i]).Days == 1) tempStreak++;
                     else
                     {
                         longestStreak = Math.Max(longestStreak, tempStreak);
@@ -348,8 +294,9 @@ namespace Mero_Dainiki.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<(int, int)>.Fail($"Error calculating streak: {ex.Message}");
+                return ServiceResult<(int, int)>.Fail($"Error: {ex.Message}");
             }
         }
     }
 }
+

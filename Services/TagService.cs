@@ -18,27 +18,28 @@ namespace Mero_Dainiki.Services
     }
 
     /// <summary>
-    /// Tag service implementation
+    /// Tag service implementation with per-user isolation
     /// </summary>
-    public class TagService : ITagService
+    public class TagService : BaseService, ITagService
     {
-        private readonly AppDbContext _context;
-
-        public TagService(AppDbContext context)
-        {
-            _context = context;
-        }
+        public TagService(AppDbContext context) : base(context) { }
 
         public async Task<ServiceResult<List<Tag>>> GetAllTagsAsync()
         {
             try
             {
-                var tags = await _context.Tags.OrderBy(t => t.Name).ToListAsync();
+                if (!IsUserAuthenticated) return ServiceResult<List<Tag>>.Fail("Unauthorized.");
+
+                var tags = await _context.Tags
+                    .Where(t => t.UserId == CurrentUserId)
+                    .OrderBy(t => t.Name)
+                    .ToListAsync();
+                
                 return ServiceResult<List<Tag>>.Ok(tags);
             }
             catch (Exception ex)
             {
-                return ServiceResult<List<Tag>>.Fail($"Error retrieving tags: {ex.Message}");
+                return ServiceResult<List<Tag>>.Fail($"Error: {ex.Message}");
             }
         }
 
@@ -46,14 +47,16 @@ namespace Mero_Dainiki.Services
         {
             try
             {
-                var existingTag = await _context.Tags.FirstOrDefaultAsync(t => t.Name == model.Name);
-                if (existingTag != null)
+                if (!IsUserAuthenticated) return ServiceResult<Tag>.Fail("Unauthorized.");
+
+                if (await _context.Tags.AnyAsync(t => t.UserId == CurrentUserId && t.Name == model.Name))
                 {
-                    return ServiceResult<Tag>.Fail("A tag with this name already exists.");
+                    return ServiceResult<Tag>.Fail("Tag already exists.");
                 }
 
                 var tag = new Tag
                 {
+                    UserId = CurrentUserId,
                     Name = model.Name,
                     Color = model.Color,
                     CreatedAt = DateTime.UtcNow
@@ -65,7 +68,7 @@ namespace Mero_Dainiki.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<Tag>.Fail($"Error creating tag: {ex.Message}");
+                return ServiceResult<Tag>.Fail($"Error: {ex.Message}");
             }
         }
 
@@ -73,11 +76,10 @@ namespace Mero_Dainiki.Services
         {
             try
             {
-                var tag = await _context.Tags.FindAsync(model.Id);
-                if (tag == null)
-                {
-                    return ServiceResult<Tag>.Fail("Tag not found.");
-                }
+                if (!IsUserAuthenticated) return ServiceResult<Tag>.Fail("Unauthorized.");
+
+                var tag = await _context.Tags.FirstOrDefaultAsync(t => t.Id == model.Id && t.UserId == CurrentUserId);
+                if (tag == null) return ServiceResult<Tag>.Fail("Tag not found.");
 
                 tag.Name = model.Name;
                 tag.Color = model.Color;
@@ -86,7 +88,7 @@ namespace Mero_Dainiki.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<Tag>.Fail($"Error updating tag: {ex.Message}");
+                return ServiceResult<Tag>.Fail($"Error: {ex.Message}");
             }
         }
 
@@ -94,11 +96,10 @@ namespace Mero_Dainiki.Services
         {
             try
             {
-                var tag = await _context.Tags.FindAsync(id);
-                if (tag == null)
-                {
-                    return ServiceResult.Fail("Tag not found.");
-                }
+                if (!IsUserAuthenticated) return ServiceResult.Fail("Unauthorized.");
+
+                var tag = await _context.Tags.FirstOrDefaultAsync(t => t.Id == id && t.UserId == CurrentUserId);
+                if (tag == null) return ServiceResult.Fail("Tag not found.");
 
                 _context.Tags.Remove(tag);
                 await _context.SaveChangesAsync();
@@ -106,8 +107,9 @@ namespace Mero_Dainiki.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult.Fail($"Error deleting tag: {ex.Message}");
+                return ServiceResult.Fail($"Error: {ex.Message}");
             }
         }
     }
 }
+
