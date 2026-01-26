@@ -3,12 +3,23 @@
 @using Mero_Dainiki.Entities
 @using Mero_Dainiki.Models
 @using Mero_Dainiki.Services
+@using Markdig
+@implements IAsyncDisposable
 @inject IJournalService JournalService
 @inject ITagService TagService
+@inject ISecurityService SecurityService
+@inject IAuthService AuthService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
-@if (PinRequired && !PinVerified)
+@* Check if user is authenticated first *@
+@if (!IsAuthenticated)
+{
+    <Mero_Dainiki.Components.Shared.AuthGuard>
+        <p>Loading...</p>
+    </Mero_Dainiki.Components.Shared.AuthGuard>
+}
+else if (PinRequired && !PinVerified)
 {
     <div class="pin-verification-modal">
         <div class="pin-verification-dialog">
@@ -85,39 +96,9 @@ else
                         <span class="word-count">Words: @WordCount</span>
                     </div>
 
-                    <!-- Formatting Toolbar -->
-                    <div class="formatting-toolbar-modern">
-                        <button class="toolbar-btn" @onclick="InsertBold" title="Bold (Ctrl+B)">
-                            <i class="bi bi-type-bold"></i>
-                        </button>
-                        <button class="toolbar-btn" @onclick="InsertItalic" title="Italic (Ctrl+I)">
-                            <i class="bi bi-type-italic"></i>
-                        </button>
-                        <button class="toolbar-btn" @onclick="InsertList" title="List (Ctrl+Shift+U)">
-                            <i class="bi bi-list-ul"></i>
-                        </button>
-                        <button class="toolbar-btn" @onclick="InsertLink" title="Link (Ctrl+K)">
-                            <i class="bi bi-link-45deg"></i>
-                        </button>
-                        <div class="toolbar-divider"></div>
-                        <button class="toolbar-btn @(ShowPreview ? "active" : "")" @onclick="TogglePreview" title="Preview">
-                            <i class="bi @(ShowPreview ? "bi-eye-slash" : "bi-eye")"></i>
-                        </button>
-                    </div>
-
-                    <!-- Preview or Editor -->
-                    @if (ShowPreview)
-                    {
-                        <div class="markdown-preview-modern">
-                            @((MarkupString)ConvertMarkdownToHtml(EntryModel.Content))
-                        </div>
-                    }
-
-                    <textarea class="textarea-modern" 
-                              rows="@(ShowPreview ? 8 : 12)"
-                              placeholder="Write something..."
-                              @bind="EntryModel.Content"
-                              @onkeydown="HandleKeyboardShortcut"></textarea>
+                    <textarea id="journal-editor"
+                              class="textarea-modern" 
+                              @bind="EntryModel.Content"></textarea>
                 </div>
             </div>
 
@@ -235,6 +216,10 @@ else
     private bool PinVerified { get; set; } = false;
     private string PinInput { get; set; } = "";
     private bool PinError { get; set; } = false;
+    private bool IsAuthenticated { get; set; } = false;
+    private bool IsCheckingAuth { get; set; } = true;
+    private bool _editorInitialized = false;
+    private DotNetObjectReference<Journal>? _objRef;
     
     private string DisplayDate => EntryModel.Date.ToString("dddd, MMMM dd, yyyy");
     private int WordCount => EntryModel.Content?.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length ?? 0;
@@ -250,11 +235,15 @@ else
             EntryModel.TagIds.Add(tagId);
     }
 
-    protected override async Task OnInitializedAsync()
+    // Auth is handled by the OnInitializedAsync at the bottom of the file
+    
+    private async Task LoadPageData()
     {
-        // Check if PIN is enabled
-        var pinEnabledStr = await JS.InvokeAsync<string>("localStorage.getItem", "pinEnabled");
-        if (pinEnabledStr == "true")
+        // Check if user has a PIN set and journal is locked
+        var hasPinResult = await SecurityService.HasPinAsync();
+        var isLockedResult = await SecurityService.IsJournalLockedAsync();
+        
+        if (hasPinResult.Success && hasPinResult.Data && isLockedResult.Success && isLockedResult.Data)
         {
             PinRequired = true;
             PinVerified = false;
@@ -262,6 +251,7 @@ else
         }
         else
         {
+            PinRequired = false;
             PinVerified = true;
         }
 
@@ -304,6 +294,41 @@ else
         }
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        var userId = await AuthService.ValidateUserAsync(JS);
+        IsAuthenticated = userId > 0;
+        IsCheckingAuth = false;
+
+        if (IsAuthenticated) await LoadPageData();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (IsAuthenticated && PinVerified && !_editorInitialized)
+        {
+            _editorInitialized = true;
+            _objRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("markdownEditor.init", "journal-editor", EntryModel.Content, _objRef);
+        }
+    }
+
+    [JSInvokable]
+    public void UpdateContentFromJS(string val)
+    {
+        EntryModel.Content = val;
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try 
+        { 
+            _objRef?.Dispose();
+            await JS.InvokeVoidAsync("markdownEditor.destroy", "journal-editor"); 
+        } catch { }
+    }
+
     private string GetMoodEmoji(Mood mood) => mood switch
     {
         Mood.VeryHappy => "😄",
@@ -316,191 +341,65 @@ else
 
     private void ToggleSecondaryMood(Mood mood)
     {
-        if (EntryModel.SecondaryMoods.Contains(mood))
-        {
-            EntryModel.SecondaryMoods.Remove(mood);
-        }
-        else if (EntryModel.SecondaryMoods.Count < 2)
-        {
-            EntryModel.SecondaryMoods.Add(mood);
-        }
-    }
-
-    private void TogglePreview() => ShowPreview = !ShowPreview;
-
-    private Task HandleKeyboardShortcut(KeyboardEventArgs e)
-    {
-        if (e.CtrlKey || e.MetaKey)
-        {
-            switch (e.Key.ToLower())
-            {
-                case "b":
-                    InsertBold();
-                    break;
-                case "i":
-                    InsertItalic();
-                    break;
-                case "k":
-                    InsertLink();
-                    break;
-                case "`":
-                    InsertCodeBlock();
-                    break;
-            }
-
-            if (e.ShiftKey)
-            {
-                switch (e.Key.ToLower())
-                {
-                    case "u":
-                        InsertList();
-                        break;
-                }
-            }
-        }
-        return Task.CompletedTask;
-    }
-
-    private void InsertBold() => EntryModel.Content += "**text**";
-    private void InsertItalic() => EntryModel.Content += "*text*";
-    private void InsertHeading(int level = 2) => EntryModel.Content += $"\n{'#' * level} Heading\n";
-    private void InsertList() => EntryModel.Content += "\n- Item 1\n- Item 2\n";
-    private void InsertOrderedList() => EntryModel.Content += "\n1. Item\n2. Item\n";
-    private void InsertBlockquote() => EntryModel.Content += "\n> Quote\n";
-    private void InsertLink() => EntryModel.Content += "[text](url)";
-    private void InsertCodeBlock() => EntryModel.Content += "\n```\ncode\n```\n";
-    private void InsertStrikethrough() => EntryModel.Content += "~~text~~";
-
-    private string ConvertMarkdownToHtml(string markdown)
-    {
-        if (string.IsNullOrEmpty(markdown)) return "<p></p>";
-        var html = markdown;
-        html = System.Net.WebUtility.HtmlEncode(html);
-        html = System.Text.RegularExpressions.Regex.Replace(html, @"^### (.+?)$", "<h5>$1</h5>", System.Text.RegularExpressions.RegexOptions.Multiline);
-        html = System.Text.RegularExpressions.Regex.Replace(html, @"^## (.+?)$", "<h4>$1</h4>", System.Text.RegularExpressions.RegexOptions.Multiline);
-        html = System.Text.RegularExpressions.Regex.Replace(html, @"^# (.+?)$", "<h3>$1</h3>", System.Text.RegularExpressions.RegexOptions.Multiline);
-        html = System.Text.RegularExpressions.Regex.Replace(html, @"\*\*(.+?)\*\*", "<strong>$1</strong>");
-        html = System.Text.RegularExpressions.Regex.Replace(html, @"\*(.+?)\*", "<em>$1</em>");
-        html = System.Text.RegularExpressions.Regex.Replace(html, @"~~(.+?)~~", "<del>$1</del>");
-        html = System.Text.RegularExpressions.Regex.Replace(html, @"\[(.+?)\]\((.+?)\)", "<a href=\"$2\" target=\"_blank\">$1</a>");
-        html = System.Text.RegularExpressions.Regex.Replace(html, @"```(.+?)```", "<pre><code>$1</code></pre>", System.Text.RegularExpressions.RegexOptions.Singleline);
-        html = System.Text.RegularExpressions.Regex.Replace(html, @"`(.+?)`", "<code>$1</code>");
-        html = html.Replace("\n", "<br>");
-        return $"<div>{html}</div>";
+        if (EntryModel.SecondaryMoods.Contains(mood)) EntryModel.SecondaryMoods.Remove(mood);
+        else if (EntryModel.SecondaryMoods.Count < 2) EntryModel.SecondaryMoods.Add(mood);
     }
 
     private async Task SaveEntry()
     {
-        IsSaving = true;
-        Message = null;
+        if (string.IsNullOrWhiteSpace(EntryModel.Content))
+        {
+            Message = "Please write something in your entry.";
+            IsSuccess = false;
+            return;
+        }
 
+        IsSaving = true;
         try
         {
-            if (string.IsNullOrWhiteSpace(EntryModel.Content))
-            {
-                Message = "Please write something in your entry.";
-                IsSuccess = false;
-                return;
-            }
-
-            var result = IsEdit
-                ? await JournalService.UpdateEntryAsync(EntryModel)
-                : await JournalService.CreateEntryAsync(EntryModel);
-
+            var result = IsEdit ? await JournalService.UpdateEntryAsync(EntryModel) : await JournalService.CreateEntryAsync(EntryModel);
             if (result.Success)
             {
-                Message = IsEdit ? "Entry updated successfully! Redirecting..." : "Entry saved successfully! Redirecting...";
+                Message = "Saved successfully! Redirecting...";
                 IsSuccess = true;
-                if (!IsEdit && result.Data != null)
-                {
-                    EntryModel.Id = result.Data.Id;
-                }
-
-                await Task.Delay(1500);
+                await Task.Delay(1000);
                 Navigation.NavigateTo("/browse");
             }
             else
             {
-                Message = result.ErrorMessage ?? "An error occurred while saving your entry.";
+                Message = result.ErrorMessage;
                 IsSuccess = false;
             }
         }
-        catch (Exception ex)
-        {
-            Message = $"Error: {ex.Message}";
-            IsSuccess = false;
-        }
-        finally
-        {
-            IsSaving = false;
-        }
+        finally { IsSaving = false; }
     }
 
     private async Task DeleteEntry()
     {
-        if (EntryModel.Id > 0)
+        if (EntryModel.Id > 0 && await JournalService.DeleteEntryAsync(EntryModel.Id) is { Success: true })
         {
-            var result = await JournalService.DeleteEntryAsync(EntryModel.Id);
-            if (result.Success)
-            {
-                Navigation.NavigateTo("/browse");
-            }
-            else
-            {
-                Message = result.ErrorMessage ?? "Error deleting entry.";
-                IsSuccess = false;
-            }
+            Navigation.NavigateTo("/browse");
         }
-    }
-
-    private void Cancel()
-    {
-        Navigation.NavigateTo("/browse");
     }
 
     private async Task VerifyPin()
     {
-        if (string.IsNullOrWhiteSpace(PinInput))
+        if (string.IsNullOrWhiteSpace(PinInput)) { PinError = true; return; }
+        
+        var result = await SecurityService.UnlockJournalAsync(PinInput);
+        if (result.Success)
         {
-            PinError = true;
-            return;
+            PinVerified = true;
+            PinRequired = false;
+            PinError = false;
+            await LoadPageData();
         }
-
-        try
-        {
-            var storedPin = await JS.InvokeAsync<string>("localStorage.getItem", "userPin");
-            
-            if (storedPin != null && PinInput == storedPin)
-            {
-                PinVerified = true;
-                PinError = false;
-                PinInput = "";
-                StateHasChanged();
-                // Now load the data
-                await OnInitializedAsync();
-            }
-            else
-            {
-                PinError = true;
-                PinInput = "";
-            }
-        }
-        catch
-        {
-            PinError = true;
-        }
+        else PinError = true;
+        PinInput = "";
     }
 
-    private async void HandlePinKeyPress(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter")
-        {
-            await VerifyPin();
-        }
-    }
-
-    private void GoBack()
-    {
-        Navigation.NavigateTo("/browse");
-    }
+    private async void HandlePinKeyPress(KeyboardEventArgs e) { if (e.Key == "Enter") await VerifyPin(); }
+    private void Cancel() => Navigation.NavigateTo("/browse");
+    private void GoBack() => Navigation.NavigateTo("/browse");
 }
+
