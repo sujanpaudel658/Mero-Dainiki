@@ -30,19 +30,35 @@
                     <h5 class="mb-0"><i class="bi bi-palette me-2"></i>Appearance</h5>
                 </div>
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div>
-                            <strong>Dark Mode</strong>
-                            <p class="text-muted mb-0 small">Switch between light and dark theme</p>
+                    <div class="mb-4">
+                        <label class="form-label d-block mb-2">Theme Mode</label>
+                        <div class="btn-group w-100 theme-selector" role="group">
+                            <input type="radio" class="btn-check" name="theme-mode" id="theme-light" 
+                                   checked="@(ThemeService.CurrentTheme == ThemeMode.Light)" 
+                                   @onchange='() => SetTheme(ThemeMode.Light)'>
+                            <label class="btn btn-outline-primary" for="theme-light">
+                                <i class="bi bi-sun me-2"></i>Light
+                            </label>
+
+                            <input type="radio" class="btn-check" name="theme-mode" id="theme-dark" 
+                                   checked="@(ThemeService.CurrentTheme == ThemeMode.Dark)" 
+                                   @onchange='() => SetTheme(ThemeMode.Dark)'>
+                            <label class="btn btn-outline-primary" for="theme-dark">
+                                <i class="bi bi-moon-stars me-2"></i>Dark
+                            </label>
+
+                            <input type="radio" class="btn-check" name="theme-mode" id="theme-system" 
+                                   checked="@(ThemeService.CurrentTheme == ThemeMode.System)" 
+                                   @onchange='() => SetTheme(ThemeMode.System)'>
+                            <label class="btn btn-outline-primary" for="theme-system">
+                                <i class="bi bi-laptop me-2"></i>System
+                            </label>
                         </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" 
-                                   id="darkModeSwitch" 
-                                   checked="@IsDarkMode"
-                                   @onchange="ToggleDarkMode">
-                        </div>
+                        <p class="text-muted mt-2 small">Choose your preferred visual style or sync with your device.</p>
                     </div>
+                    
                     <hr />
+                    
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <strong>Font Size</strong>
@@ -163,7 +179,7 @@
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
-    private bool IsDarkMode { get; set; } = false;
+
     private string FontSize { get; set; } = "Medium";
     private bool DailyReminderEnabled { get; set; } = true;
     private string ReminderTime { get; set; } = "20:00";
@@ -180,7 +196,7 @@
         if (firstRender)
         {
             await ThemeService.InitializeThemeAsync();
-            IsDarkMode = ThemeService.CurrentTheme == ThemeMode.Dark;
+
             
             // Load user info from database (rest of the code unchanged)
             var user = await UserService.GetCurrentUserAsync();
@@ -211,10 +227,8 @@
         Navigation.NavigateTo("/login", true);
     }
 
-    private async Task ToggleDarkMode(ChangeEventArgs e)
+    private async Task SetTheme(ThemeMode theme)
     {
-        IsDarkMode = (bool)(e.Value ?? false);
-        var theme = IsDarkMode ? ThemeMode.Dark : ThemeMode.Light;
         await ThemeService.SetThemeAsync(theme);
         ShowSettingsMessage("Theme updated successfully", true);
     }
