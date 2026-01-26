@@ -6,72 +6,129 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
-<div class="register-container">
-    <div class="register-gradient"></div>
-    <div class="register-card">
-        <div class="register-header">
-            <h1 class="register-title">Mero-Dainiki</h1>
-            <p class="register-subtitle">Create your account</p>
+<main class="register-page-root">
+    <!-- Left Side - Editorial Content -->
+    <div class="brand-overlay">
+        <h2 class="brand-quote">
+            Every day is a <span>new chapter</span> waiting to be written.
+        </h2>
+    </div>
+
+    <div class="login-container">
+        <!-- Back Button -->
+        <div class="register-back-overlay">
+            <button class="btn-back" @onclick="GoBack">
+                <i class="bi bi-arrow-left"></i>
+            </button>
         </div>
 
-        <EditForm Model="@registerModel" OnValidSubmit="HandleRegister">
-            <DataAnnotationsValidator />
-
-            <div class="form-group">
-                <label class="form-label">Username</label>
-                <InputText class="form-control" @bind-Value="registerModel.Username" placeholder="Choose a username" />
-                <ValidationMessage For="@(() => registerModel.Username)" class="error-text" />
+        <div class="login-card">
+            <!-- Brand Icon -->
+            <div class="login-icon-wrapper fade-in">
+                <i class="bi bi-person-plus"></i>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Email</label>
-                <input type="email" class="form-control" @bind="registerModel.Email" placeholder="Enter your email" />
-                <ValidationMessage For="@(() => registerModel.Email)" class="error-text" />
-            </div>
+            <!-- Title Section -->
+            <h1 class="fade-in">Create Account</h1>
+            <p class="text-muted fade-in">Join the quiet community of journalers.</p>
 
-            <div class="form-group">
-                <label class="form-label">Password</label>
-                <InputText type="password" class="form-control" @bind-Value="registerModel.Password" placeholder="Create a password" />
-                <ValidationMessage For="@(() => registerModel.Password)" class="error-text" />
-            </div>
+            <!-- Registration Form -->
+            <div class="login-form fade-up">
+                <EditForm Model="@registerModel" OnValidSubmit="HandleRegister">
+                    <DataAnnotationsValidator />
 
-            <div class="form-group">
-                <label class="form-label">Confirm Password</label>
-                <InputText type="password" class="form-control" @bind-Value="registerModel.ConfirmPassword" placeholder="Confirm your password" />
-                <ValidationMessage For="@(() => registerModel.ConfirmPassword)" class="error-text" />
-            </div>
+                    <!-- Username Field -->
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <InputText class="form-control" @bind-Value="registerModel.Username" placeholder="sujan_p" />
+                        </div>
+                        <ValidationMessage For="@(() => registerModel.Username)" class="text-danger small mt-1" />
+                    </div>
 
-            @if (!string.IsNullOrEmpty(ErrorMessage))
-            {
-                <div class="alert-box error">
-                    @ErrorMessage
+                    <!-- Email Field -->
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input type="email" class="form-control" @bind="@registerModel.Email" placeholder="sujan@example.com" />
+                        </div>
+                        <ValidationMessage For="@(() => registerModel.Email)" class="text-danger small mt-1" />
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <InputText type="@(showPassword ? "text" : "password")" class="form-control" @bind-Value="registerModel.Password" placeholder="••••••••" />
+                            <button type="button" class="btn btn-outline-secondary" @onclick="TogglePasswordVisibility">
+                                <i class="bi bi-eye@(showPassword ? "-slash" : "")"></i>
+                            </button>
+                        </div>
+                        <ValidationMessage For="@(() => registerModel.Password)" class="text-danger small mt-1" />
+                    </div>
+
+                    <!-- Confirm Password Field -->
+                    <div class="mb-4">
+                        <label class="form-label">Confirm Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-shield-check"></i></span>
+                            <InputText type="@(showConfirmPassword ? "text" : "password")" class="form-control" @bind-Value="registerModel.ConfirmPassword" placeholder="••••••••" />
+                            <button type="button" class="btn btn-outline-secondary" @onclick="ToggleConfirmPasswordVisibility">
+                                <i class="bi bi-eye@(showConfirmPassword ? "-slash" : "")"></i>
+                            </button>
+                        </div>
+                        <ValidationMessage For="@(() => registerModel.ConfirmPassword)" class="text-danger small mt-1" />
+                    </div>
+
+                    <!-- Error/Success Messages -->
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <div class="alert alert-danger py-2 px-3 mb-3 small">
+                            <i class="bi bi-exclamation-circle me-2"></i>@ErrorMessage
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(SuccessMessage))
+                    {
+                        <div class="alert alert-success py-2 px-3 mb-3 small">
+                            <i class="bi bi-check-circle me-2"></i>@SuccessMessage
+                        </div>
+                    }
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary login-btn w-100 mb-3" disabled="@IsLoading">
+                        @if (IsLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Setting up...</span>
+                        }
+                        else
+                        {
+                            <span>Create Account</span>
+                            <i class="bi bi-arrow-right ms-2"></i>
+                        }
+                    </button>
+                </EditForm>
+
+                <!-- Sign In Link -->
+                <div class="text-center">
+                    <small>
+                        Already a member? <a href="/login">Sign in</a>
+                    </small>
                 </div>
-            }
-
-            @if (!string.IsNullOrEmpty(SuccessMessage))
-            {
-                <div class="alert-box success">
-                    @SuccessMessage
-                </div>
-            }
-
-            <button type="submit" class="btn-register" disabled="@IsLoading">
-                @if (IsLoading)
-                {
-                    <span>Creating Account...</span>
-                }
-                else
-                {
-                    <span>Create Account</span>
-                }
-            </button>
-
-            <div class="register-footer">
-                <p>Already have an account? <a href="/login">Sign In</a></p>
             </div>
-        </EditForm>
+        </div>
+
+        <!-- Security Notice -->
+        <div class="security-footer fade-in-delayed">
+            <i class="bi bi-lock me-1"></i>
+            End-to-end encrypted
+        </div>
     </div>
-</div>
+</main>
 
 
 @code {
@@ -79,6 +136,12 @@
     private bool IsLoading = false;
     private string? ErrorMessage { get; set; }
     private string? SuccessMessage { get; set; }
+    private bool showPassword = false;
+    private bool showConfirmPassword = false;
+
+    private void TogglePasswordVisibility() => showPassword = !showPassword;
+    private void ToggleConfirmPasswordVisibility() => showConfirmPassword = !showConfirmPassword;
+    private void GoBack() => Navigation.NavigateTo("/");
 
     private async Task HandleRegister()
     {
@@ -99,14 +162,13 @@
 
             if (result.Success)
             {
-                // Save authentication token and user info
-                await JS.InvokeVoidAsync("localStorage.setItem", "authToken", result.Data!.Id.ToString());
-                await JS.InvokeVoidAsync("localStorage.setItem", "userId", result.Data!.Id.ToString());
-                await JS.InvokeVoidAsync("localStorage.setItem", "username", result.Data!.Username);
+                // Store username in localStorage for NavMenu display
+                await JS.InvokeVoidAsync("localStorage.setItem", "username", result.Data?.Username ?? registerModel.Username);
+                await JS.InvokeVoidAsync("localStorage.setItem", "userId", result.Data?.Id.ToString() ?? "");
                 
                 SuccessMessage = "Account created successfully! Redirecting to dashboard...";
                 await Task.Delay(1500);
-                Navigation.NavigateTo("/dashboard");
+                Navigation.NavigateTo("/dashboard", true);
             }
             else
             {
