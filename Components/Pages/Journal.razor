@@ -21,6 +21,10 @@
 }
 else if (PinRequired && !PinVerified)
 {
+    @* Override layout transitions that break full-screen centered overlays *@
+    <style>
+        .content { transform: none !important; animation: none !important; }
+    </style>
     <div class="pin-verification-modal">
         <div class="pin-verification-dialog">
             <div class="pin-header">
@@ -96,9 +100,12 @@ else
                         <span class="word-count">Words: @WordCount</span>
                     </div>
 
-                    <textarea id="journal-editor"
-                              class="textarea-modern" 
-                              @bind="EntryModel.Content"></textarea>
+                    <div id="journal-editor">
+                        <div class="p-5 text-center text-muted">
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            Loading Editor...
+                        </div>
+                    </div>
                 </div>
             </div>
 
