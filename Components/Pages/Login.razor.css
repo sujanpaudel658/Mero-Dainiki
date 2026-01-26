@@ -228,39 +228,50 @@
     display: block;
 }
 
+.login-form .input-group {
+    background: var(--bg-input);
+    border-bottom: 2px solid var(--border-light);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+}
+
+.login-form .input-group:focus-within {
+    border-color: var(--primary);
+}
+
 .login-form .form-control {
     height: 52px;
-    background: var(--bg-input) !important;
+    background: transparent !important;
     border: none !important;
-    border-bottom: 2px solid var(--border-light) !important;
-    border-radius: 10px !important;
+    border-radius: 0 !important;
     color: var(--text-primary) !important;
     font-size: 0.95rem;
     padding: 0 1rem;
-    transition: all 0.2s ease;
+    box-shadow: none !important;
 }
 
 .login-form :global(.form-control) {
-    background: var(--bg-input) !important;
+    background: transparent !important;
     color: var(--text-primary) !important;
     border: none !important;
-    border-bottom: 2px solid var(--border-light) !important;
-}
-
-.login-form .form-control:focus {
-    border-color: #6366f1 !important;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.08) !important;
 }
 
 .login-form .input-group-text {
-    background: var(--bg-input) !important;
+    background: transparent !important;
     border: none !important;
-    border-bottom: 2px solid var(--border-light) !important;
+    color: var(--text-muted) !important;
+    padding-right: 0;
+}
+
+.login-form .input-group .btn-outline-secondary {
+    border: none !important;
+    background: transparent !important;
     color: var(--text-muted) !important;
 }
 
-.login-form .input-group .form-control {
-    border-left: none !important;
+.login-form .input-group .btn-outline-secondary:hover {
+    color: var(--primary) !important;
 }
 
 /* Main Button */

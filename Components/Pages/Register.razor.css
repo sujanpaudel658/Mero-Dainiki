@@ -255,48 +255,68 @@
     display: block;
 }
 
+.login-form .input-group {
+    background: var(--bg-input);
+    border-bottom: 2px solid var(--border-light);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+}
+
+.login-form .input-group:focus-within {
+    border-color: var(--primary);
+}
+
 .login-form .form-control {
     height: 48px;
-    background: var(--bg-input) !important;
+    background: transparent !important;
     border: none !important;
-    border-bottom: 2px solid var(--border-light) !important;
-    border-radius: 8px !important;
+    border-radius: 0 !important;
     color: var(--text-primary) !important;
     font-size: 0.95rem;
     padding: 0 1rem;
+    box-shadow: none !important;
 }
 
 /* Force theme consistency for inputs */
 .login-form input,
 .login-form :global(.form-control),
 .login-form :global(input) {
-    background-color: var(--bg-input) !important;
+    background-color: transparent !important;
     color: var(--text-primary) !important;
     border: none !important;
-    border-bottom: 2px solid var(--border-light) !important;
 }
 
 .login-form :global(.form-control:focus),
 .login-form :global(input:focus) {
-    background-color: var(--bg-input) !important;
+    background-color: transparent !important;
     color: var(--text-primary) !important;
-    border-color: var(--primary) !important;
+    border: none !important;
 }
 
 .login-form .form-control:focus {
-    border-color: var(--primary) !important;
-    box-shadow: 0 0 0 4px var(--primary-glow) !important;
+    box-shadow: none !important;
 }
 
 .login-form .input-group-text {
-    background: var(--bg-input) !important;
+    background: transparent !important;
     border: none !important;
-    border-bottom: 2px solid var(--border-light) !important;
+    color: var(--text-muted) !important;
+    padding-right: 0;
+}
+
+.login-form .input-group .btn-outline-secondary {
+    border: none !important;
+    background: transparent !important;
     color: var(--text-muted) !important;
 }
 
+.login-form .input-group .btn-outline-secondary:hover {
+    color: var(--primary) !important;
+}
+
 .login-form .input-group .form-control {
-    border-left: none !important;
+    border: none !important;
 }
 
 /* Submit Button */
