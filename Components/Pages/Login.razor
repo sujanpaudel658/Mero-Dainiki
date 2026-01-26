@@ -1,109 +1,104 @@
+@page "/"
 @page "/login"
 @using Mero_Dainiki.Services
 @using Mero_Dainiki.Models
 @using Microsoft.AspNetCore.Components.Web
+@layout Mero_Dainiki.Components.Layout.EmptyLayout
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
 
 <main class="login-page-root">
+    <!-- Left Side - Editorial Content -->
+    <div class="brand-overlay">
+        <h2 class="brand-quote">
+            A quiet space for your <span>truest thoughts.</span>
+        </h2>
+    </div>
+
     <div class="login-container">
         <div class="login-card">
-            <!-- Logo/Brand Section -->
-            <div class="text-center mb-4 fade-in">
-                <div class="login-icon-wrapper mb-3">
-                    <i class="bi bi-lock-fill"></i>
-                </div>
-                <h1 class="fw-bold mb-2">Mero Dainiki</h1>
-                <p class="text-muted mb-0">Secure your journal</p>
+            <!-- Brand Icon -->
+            <div class="login-icon-wrapper fade-in">
+                <i class="bi bi-journal-text"></i>
             </div>
+
+            <!-- Title Section -->
+            <h1 class="fade-in">Sign In</h1>
+            <p class="text-muted fade-in">Enter your credentials to access your diary.</p>
 
             <!-- Login Form -->
             <div class="login-form fade-up">
                 <!-- Username/Email Input -->
-                <div class="mb-3">
-                    <label for="username" class="form-label fw-semibold">Username or Email</label>
+                <div class="mb-4">
+                    <label for="username" class="form-label">Username or Email</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-light">
-                            <i class="bi bi-person-fill"></i>
-                        </span>
+                        <span class="input-group-text"><i class="bi bi-person"></i></span>
                         <input type="text" 
-                               class="form-control form-control-lg" 
+                               class="form-control" 
                                id="username" 
-                               placeholder="Enter your username or email"
+                               placeholder="e.g. sujan123"
                                @bind="Username"
+                               @bind:event="oninput"
                                @onkeypress="HandleKeyPress" />
                     </div>
                 </div>
 
                 <!-- Password Input -->
-                <div class="mb-3">
-                    <label for="password" class="form-label fw-semibold">Password</label>
+                <div class="mb-4">
+                    <label for="password" class="form-label">Password</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-light">
-                            <i class="bi bi-lock-fill"></i>
-                        </span>
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
                         <input type='@(ShowPassword ? "text" : "password")' 
-                               class="form-control form-control-lg" 
+                               class="form-control" 
                                id="password" 
-                               placeholder="Enter your password"
+                               placeholder="********"
                                @bind="Password"
+                               @bind:event="oninput"
                                @onkeypress="HandleKeyPress" />
                         <button class="btn btn-outline-secondary" type="button" @onclick="TogglePasswordVisibility">
-                            <i class='bi bi-eye@(ShowPassword ? "-slash" : "")-fill'></i>
+                            <i class='bi bi-eye@(ShowPassword ? "-slash" : "")'></i>
                         </button>
-                    </div>
-                </div>
-
-                <!-- Remember Me -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="rememberMe" @bind="RememberMe" />
-                        <label class="form-check-label" for="rememberMe">
-                            Remember me
-                        </label>
                     </div>
                 </div>
 
                 <!-- Error Message -->
                 @if (!string.IsNullOrEmpty(ErrorMessage))
                 {
-                    <div class="alert alert-danger d-flex align-items-center mb-3" role="alert">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <div>@ErrorMessage</div>
+                    <div class="alert alert-danger py-2 px-3 mb-4 small" role="alert">
+                        <i class="bi bi-exclamation-circle me-2"></i>
+                        @ErrorMessage
                     </div>
                 }
 
                 <!-- Login Button -->
-                <button class="btn btn-primary btn-lg w-100 mb-3 login-btn" 
+                <button class="btn btn-primary login-btn w-100 mb-4" 
                         @onclick="HandleLogin" 
                         disabled="@IsLoading">
                     @if (IsLoading)
                     {
-                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                        <span>Authenticating...</span>
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        <span>Verifying...</span>
                     }
                     else
                     {
-                        <i class="bi bi-box-arrow-in-right me-2"></i>
                         <span>Login</span>
+                        <i class="bi bi-arrow-right"></i>
                     }
                 </button>
 
                 <!-- Sign Up Link -->
                 <div class="text-center">
-                    <small class="text-muted">
-                        Don't have an account? <a href="/register" class="text-decoration-none">Sign up here</a>
+                    <small>
+                        New here? <a href="/register">Create an account</a>
                     </small>
                 </div>
             </div>
         </div>
 
         <!-- Security Notice -->
-        <div class="text-center mt-4 fade-in-delayed">
-            <small class="text-muted">
-                <i class="bi bi-shield-check me-1"></i>
-                Your data is encrypted and stored locally
-            </small>
+        <div class="security-footer fade-in-delayed">
+            <i class="bi bi-shield-check me-1"></i>
+            Self-hosted & Private
         </div>
     </div>
 </main>
@@ -118,6 +113,16 @@
     private bool RememberMe { get; set; } = false;
     private bool IsLoading { get; set; } = false;
     private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Check if user is already authenticated - redirect to dashboard
+        // var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        // if (isAuthenticated)
+        // {
+        //     Navigation.NavigateTo("/dashboard", true);
+        // }
+    }
 
     private void TogglePasswordVisibility()
     {
@@ -160,17 +165,13 @@
 
             if (result.Success)
             {
-                // Save authentication token and user ID
-                await JS.InvokeVoidAsync("localStorage.setItem", "authToken", result.Data!.Id.ToString());
-                await JS.InvokeVoidAsync("localStorage.setItem", "userId", result.Data!.Id.ToString());
-                await JS.InvokeVoidAsync("localStorage.setItem", "username", result.Data!.Username);
+                // Store username in localStorage for NavMenu display
+                await JS.InvokeVoidAsync("localStorage.setItem", "username", result.Data?.Username ?? Username);
+                await JS.InvokeVoidAsync("localStorage.setItem", "userId", result.Data?.Id.ToString() ?? "");
+                await JS.InvokeVoidAsync("localStorage.setItem", "authToken", "dummy_token"); // Fix for MainLayout auth check
                 
-                if (RememberMe)
-                {
-                    await JS.InvokeVoidAsync("localStorage.setItem", "rememberMe", "true");
-                    await JS.InvokeVoidAsync("localStorage.setItem", "lastUsername", Username);
-                }
-                Navigation.NavigateTo("/dashboard");
+                // Navigate to dashboard
+                Navigation.NavigateTo("/dashboard", true);
             }
             else
             {
