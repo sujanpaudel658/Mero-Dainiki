@@ -2,7 +2,9 @@
 @using Mero_Dainiki.Services
 @using Mero_Dainiki.Models
 @layout Mero_Dainiki.Components.Layout.EmptyLayout
+@implements IDisposable
 @inject IAuthService AuthService
+@inject IThemeService ThemeService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
@@ -15,6 +17,13 @@
     </div>
 
     <div class="login-container">
+        <!-- Theme Toggle -->
+        <div class="theme-toggle-wrapper">
+            <button class="btn-theme-toggle" @onclick="ThemeService.ToggleThemeAsync" title="Change Theme">
+                <i class="bi @(ThemeService.CurrentTheme == Mero_Dainiki.Entities.ThemeMode.Dark ? "bi-sun-fill" : "bi-moon-fill")"></i>
+            </button>
+        </div>
+
         <!-- Back Button -->
         <div class="register-back-overlay">
             <button class="btn-back" @onclick="GoBack">
@@ -132,6 +141,22 @@
 
 
 @code {
+    protected override async Task OnInitializedAsync()
+    {
+        ThemeService.OnThemeChanged += StateHasChanged;
+        
+        var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        if (isAuthenticated)
+        {
+            Navigation.NavigateTo("/dashboard");
+        }
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= StateHasChanged;
+    }
+
     private RegisterModel registerModel = new();
     private bool IsLoading = false;
     private string? ErrorMessage { get; set; }
@@ -165,6 +190,11 @@
                 // Store username in localStorage for NavMenu display
                 await JS.InvokeVoidAsync("localStorage.setItem", "username", result.Data?.Username ?? registerModel.Username);
                 await JS.InvokeVoidAsync("localStorage.setItem", "userId", result.Data?.Id.ToString() ?? "");
+                await JS.InvokeVoidAsync("localStorage.setItem", "authToken", "dummy_token");
+                
+                // Store expiration for 7 days
+                var expiration = DateTime.UtcNow.AddDays(7).ToString("O");
+                await JS.InvokeVoidAsync("localStorage.setItem", "authExpiration", expiration);
                 
                 SuccessMessage = "Account created successfully! Redirecting to dashboard...";
                 await Task.Delay(1500);

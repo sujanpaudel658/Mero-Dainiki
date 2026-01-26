@@ -5,13 +5,53 @@
 
 /* Full Page Container */
 .login-page-root {
-    min-height: 100vh;
+    height: 100vh;
+    height: 100dvh;
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: #0d0d12;
-    overflow: hidden;
-    position: relative;
+    background: var(--bg-primary);
+    overflow: hidden !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+/* Theme Toggle */
+.theme-toggle-wrapper {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    z-index: 100;
+}
+
+.btn-theme-toggle {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light) !important;
+    color: var(--primary);
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-size: 1.4rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-theme-toggle:hover {
+    background: var(--primary);
+    color: white;
+    transform: rotate(45deg) scale(1.1);
+    box-shadow: 0 0 20px var(--primary-glow);
+}
+
+/* Global Border Override for Login Page */
+.login-card {
+    border: none !important;
+    box-shadow: none !important;
 }
 
 /* Left Side - Deep Cosmic Space (REVERTED AS REQUESTED) */
@@ -71,9 +111,9 @@
     padding: 3rem;
     position: relative;
     z-index: 10;
-    background: #f8f9fa !important;
-    /* Smoky White */
-    box-shadow: -10px 0 50px rgba(0, 0, 0, 0.05);
+    background: var(--bg-card) !important;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
 }
 
 /* Left Side Text Content */
@@ -164,15 +204,14 @@
 .login-card h1 {
     font-size: 2.5rem;
     font-weight: 800;
-    color: #1e293b !important;
-    /* Dark Slate */
+    color: var(--text-primary) !important;
     letter-spacing: -0.04em;
     margin-bottom: 0.5rem;
     text-align: center;
 }
 
 .login-card .text-muted {
-    color: #64748b !important;
+    color: var(--text-muted) !important;
     font-size: 1rem;
     margin-bottom: 2.5rem;
     text-align: center;
@@ -184,25 +223,28 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #475569 !important;
+    color: var(--text-secondary) !important;
     margin-bottom: 0.5rem;
     display: block;
 }
 
 .login-form .form-control {
     height: 52px;
-    background: #ffffff !important;
-    border: 1px solid #e2e8f0 !important;
+    background: var(--bg-input) !important;
+    border: none !important;
+    border-bottom: 2px solid var(--border-light) !important;
     border-radius: 10px !important;
-    color: #0f172a !important;
+    color: var(--text-primary) !important;
     font-size: 0.95rem;
     padding: 0 1rem;
     transition: all 0.2s ease;
 }
 
 .login-form :global(.form-control) {
-    background: #ffffff !important;
-    color: #0f172a !important;
+    background: var(--bg-input) !important;
+    color: var(--text-primary) !important;
+    border: none !important;
+    border-bottom: 2px solid var(--border-light) !important;
 }
 
 .login-form .form-control:focus {
@@ -211,10 +253,10 @@
 }
 
 .login-form .input-group-text {
-    background: #f8fafc !important;
-    border: 1px solid #e2e8f0 !important;
-    border-right: none !important;
-    color: #94a3b8 !important;
+    background: var(--bg-input) !important;
+    border: none !important;
+    border-bottom: 2px solid var(--border-light) !important;
+    color: var(--text-muted) !important;
 }
 
 .login-form .input-group .form-control {
@@ -241,7 +283,11 @@
     box-shadow: 0 12px 24px rgba(99, 102, 241, 0.25);
 }
 
-/* Links */
+/* Links & Footer Text */
+.login-card small {
+    color: #64748b !important;
+}
+
 .login-card a {
     color: #6366f1 !important;
     font-weight: 700;
@@ -264,11 +310,7 @@
     gap: 0.5rem;
 }
 
-/* Fixed Style - No dark theme switching for this page */
-:global(html.dark) .login-page-root,
-:global(html.light) .login-page-root {
-    background: #0d0d12;
-}
+/* Page themes handled by variables */
 
 /* Mobile Responsive */
 @media (max-width: 992px) {
@@ -285,5 +327,9 @@
     .login-container {
         grid-column: 1;
         background: #f8f9fa;
+        height: 100vh;
+        height: 100dvh;
+        margin-top: env(safe-area-inset-top);
+        padding: 2rem 1.5rem;
     }
 }
