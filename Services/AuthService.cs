@@ -3,6 +3,7 @@ using Mero_Dainiki.Data;
 using Mero_Dainiki.Entities;
 using Mero_Dainiki.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.JSInterop;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -15,9 +16,8 @@ namespace Mero_Dainiki.Services
     {
         Task<ServiceResult<User>> LoginAsync(UserAuthModel model);
         Task<ServiceResult<User>> RegisterAsync(UserRegisterModel model);
-        Task<ServiceResult> VerifyPinAsync(string pin);
-        Task<ServiceResult> SetPinAsync(string pin);
         Task<bool> IsAuthenticatedAsync();
+        Task<int> ValidateUserAsync(IJSRuntime js);
         Task LogoutAsync();
     }
 
@@ -28,7 +28,6 @@ namespace Mero_Dainiki.Services
     {
         private readonly AppDbContext _context;
         private const string CurrentUserKey = "current_user_id";
-        private const string PinKey = "app_pin";
 
         public AuthService(AppDbContext context)
         {
@@ -39,7 +38,8 @@ namespace Mero_Dainiki.Services
         {
             try
             {
-                var passwordHash = HashPassword(model.Password);
+                var passwordHash = SecurityUtils.HashString(model.Password);
+                
                 // Support both username and email login
                 var user = await _context.Users
                     .FirstOrDefaultAsync(u => (u.Username == model.Username || u.Email == model.Username) && u.PasswordHash == passwordHash);
@@ -49,15 +49,32 @@ namespace Mero_Dainiki.Services
                     return ServiceResult<User>.Fail("Invalid username/email or password.");
                 }
 
+                if (!user.IsActive)
+                {
+                    return ServiceResult<User>.Fail("Account is inactive.");
+                }
+
+                // Update last login time
                 user.LastLoginAt = DateTime.UtcNow;
+                
+                // Log this login in LoginHistory for audit trail
+                var loginHistory = new LoginHistory
+                {
+                    UserId = user.Id,
+                    LoginTime = DateTime.UtcNow,
+                    IsSuccessful = true
+                };
+                
+                _context.LoginHistories.Add(loginHistory);
                 await _context.SaveChangesAsync();
 
+                // Store user ID in MAUI Preferences
                 Preferences.Default.Set(CurrentUserKey, user.Id);
                 return ServiceResult<User>.Ok(user);
             }
             catch (Exception ex)
             {
-                return ServiceResult<User>.Fail($"Login error: {ex.Message}");
+                return ServiceResult<User>.Fail($"Login failed: {ex.Message}");
             }
         }
 
@@ -70,28 +87,37 @@ namespace Mero_Dainiki.Services
                     return ServiceResult<User>.Fail("Passwords do not match.");
                 }
 
-                var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == model.Username);
-                if (existingUser != null)
+                if (await _context.Users.AnyAsync(u => u.Username == model.Username))
                 {
-                    return ServiceResult<User>.Fail("Username already taken.");
+                    return ServiceResult<User>.Fail("Username is already taken.");
                 }
 
-                var existingEmail = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
-                if (existingEmail != null)
+                if (await _context.Users.AnyAsync(u => u.Email == model.Email))
                 {
-                    return ServiceResult<User>.Fail("Email already registered.");
+                    return ServiceResult<User>.Fail("Email is already registered.");
                 }
 
                 var user = new User
                 {
                     Username = model.Username,
                     Email = model.Email,
-                    PasswordHash = HashPassword(model.Password),
-                    Pin = model.Pin,
-                    CreatedAt = DateTime.UtcNow
+                    PasswordHash = SecurityUtils.HashString(model.Password),
+                    Pin = !string.IsNullOrEmpty(model.Pin) ? SecurityUtils.HashString(model.Pin) : null,
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
                 };
 
                 _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                // Log registration as first login
+                var loginHistory = new LoginHistory
+                {
+                    UserId = user.Id,
+                    LoginTime = DateTime.UtcNow,
+                    IsSuccessful = true
+                };
+                _context.LoginHistories.Add(loginHistory);
                 await _context.SaveChangesAsync();
 
                 Preferences.Default.Set(CurrentUserKey, user.Id);
@@ -99,33 +125,7 @@ namespace Mero_Dainiki.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<User>.Fail($"Registration error: {ex.Message}");
-            }
-        }
-
-        public Task<ServiceResult> VerifyPinAsync(string pin)
-        {
-            var savedPin = Preferences.Default.Get(PinKey, string.Empty);
-            if (string.IsNullOrEmpty(savedPin))
-            {
-                return Task.FromResult(ServiceResult.Ok());
-            }
-
-            return Task.FromResult(savedPin == pin
-                ? ServiceResult.Ok()
-                : ServiceResult.Fail("Invalid PIN."));
-        }
-
-        public Task<ServiceResult> SetPinAsync(string pin)
-        {
-            try
-            {
-                Preferences.Default.Set(PinKey, pin);
-                return Task.FromResult(ServiceResult.Ok());
-            }
-            catch (Exception ex)
-            {
-                return Task.FromResult(ServiceResult.Fail($"Error setting PIN: {ex.Message}"));
+                return ServiceResult<User>.Fail($"Registration failed: {ex.Message}");
             }
         }
 
@@ -135,17 +135,36 @@ namespace Mero_Dainiki.Services
             return Task.FromResult(userId > 0);
         }
 
+        public async Task<int> ValidateUserAsync(IJSRuntime js)
+        {
+            try
+            {
+                var userId = Preferences.Default.Get(CurrentUserKey, 0);
+                
+                // If not in preferences, try localStorage
+                if (userId <= 0)
+                {
+                    var lsUserId = await js.InvokeAsync<string>("localStorage.getItem", "userId");
+                    if (!string.IsNullOrEmpty(lsUserId) && int.TryParse(lsUserId, out userId))
+                    {
+                        Preferences.Default.Set(CurrentUserKey, userId);
+                    }
+                }
+                
+                return userId;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
         public Task LogoutAsync()
         {
             Preferences.Default.Remove(CurrentUserKey);
             return Task.CompletedTask;
         }
-
-        private static string HashPassword(string password)
-        {
-            using var sha256 = SHA256.Create();
-            var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(bytes);
-        }
     }
 }
+
+
