@@ -1,55 +1,57 @@
-// Theme Manager
+/**
+ * Mero-Dainiki Theme Manager
+ * Handles toggling between light and dark modes via data-theme attribute and CSS classes.
+ */
 window.themeManager = {
-    setTheme: function(theme) {
-        const html = document.documentElement;
-        const body = document.body;
-        
-        // Remove both classes first
-        html.classList.remove('light', 'dark');
-        body.classList.remove('light', 'dark');
-        
-        // Add the new theme class
-        html.classList.add(theme);
-        body.classList.add(theme);
-        
-        // Also set data attribute for CSS selectors
-        html.setAttribute('data-theme', theme);
-        body.setAttribute('data-theme', theme);
-        
-        // Store preference
+    /**
+     * Sets the theme on the document root and persists it.
+     * @param {string} theme - 'light' or 'dark'
+     */
+    setTheme: function (theme) {
+        // Set data attribute for global styles
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.setAttribute('data-bs-theme', theme); // Bootstrap support
+
+        // Toggle CSS classes for scoped styles (html.dark / html.light)
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(theme);
+
         localStorage.setItem('theme', theme);
-        
-        console.log('Theme set to:', theme);
-        
-        // Force repaint
-        document.body.style.display = 'none';
-        document.body.offsetHeight; // Trigger reflow
-        document.body.style.display = '';
+        console.log(`Theme set to: ${theme}`);
     },
-    
-    getTheme: function() {
-        return localStorage.getItem('theme') || 'light';
+
+    /**
+     * Gets the current theme from local storage or system preference.
+     * @returns {string} 'light' or 'dark'
+     */
+    getTheme: function () {
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme) {
+            return storedTheme;
+        }
+        // Fallback to system preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return 'dark';
+        }
+        return 'light';
     },
-    
-    toggleTheme: function() {
-        const currentTheme = this.getTheme();
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        this.setTheme(newTheme);
-        return newTheme;
+
+    /**
+     * Initializes the theme on load.
+     */
+    initTheme: function () {
+        const theme = this.getTheme();
+        this.setTheme(theme);
     }
 };
 
-// Initialize theme on page load
-document.addEventListener('DOMContentLoaded', function() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    window.themeManager.setTheme(savedTheme);
-});
+// Initialize immediately to prevent flash
+window.themeManager.initTheme();
 
-// Also initialize immediately in case DOMContentLoaded already fired
-(function() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    if (document.documentElement) {
-        document.documentElement.classList.add(savedTheme);
-        document.documentElement.setAttribute('data-theme', savedTheme);
+// Listen for system changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    if (!localStorage.getItem('theme')) {
+        // Only react to system change if user hasn't manually set a preference
+        window.themeManager.setTheme(e.matches ? 'dark' : 'light');
     }
-})();
+});
