@@ -1,17 +1,27 @@
 .security-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: var(--bg-primary);
     padding: 2rem 0;
+    transition: background 0.3s ease;
 }
 
 .security-header {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    color: white;
+    background: var(--bg-card);
+    color: var(--text-primary);
     padding: 3rem 2rem;
     text-align: center;
     margin-bottom: 2rem;
-    border-radius: 0 0 20px 20px;
-    box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+    border-radius: 16px;
+    border: 1px solid var(--border-medium);
+    box-shadow: var(--shadow-sm);
+}
+
+.security-header .header-title i {
+    color: var(--primary);
+}
+
+.security-header .header-subtitle {
+    color: var(--text-secondary);
 }
 
 .security-header .header-title {
@@ -43,11 +53,11 @@
 .security-card {
     background: var(--bg-card);
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
     margin-bottom: 2rem;
     overflow: hidden;
     transition: box-shadow 0.3s ease;
-    border: 1px solid var(--border-light);
+    border: 1px solid var(--border-medium);
 }
 
 .security-card:hover {
@@ -57,7 +67,7 @@
 .card-header {
     background: var(--bg-tertiary);
     padding: 1.5rem;
-    border-bottom: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-medium);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -67,7 +77,7 @@
     margin: 0;
     font-size: 1.3rem;
     font-weight: 600;
-    color: #1a202c;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     gap: 0.8rem;
@@ -109,7 +119,7 @@
 }
 
 .section-description {
-    color: #666;
+    color: var(--text-secondary);
     line-height: 1.6;
     margin: 0;
 }
@@ -137,12 +147,14 @@
 .form-label {
     font-size: 0.9rem;
     font-weight: 500;
-    color: #4a5568;
+    color: var(--text-secondary);
 }
 
 .form-input {
     padding: 0.75rem 1rem;
-    border: 1px solid #e2e8f0;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border-medium);
     border-radius: 8px;
     font-size: 0.95rem;
     transition: all 0.2s ease;
@@ -247,14 +259,17 @@
 }
 
 .info-box {
-    background: #e0f2fe;
-    border-left: 4px solid #0284c7;
+    background: var(--bg-tertiary);
+    border-left: 4px solid var(--primary);
     padding: 1rem;
     border-radius: 8px;
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    color: #0c4a6e;
+    color: var(--text-primary);
+    border-top: 1px solid var(--border-medium);
+    border-right: 1px solid var(--border-medium);
+    border-bottom: 1px solid var(--border-medium);
 }
 
 .info-box i {
@@ -286,81 +301,7 @@
     line-height: 1.6;
 }
 
-/* Dark Mode */
-:global(html.dark) .security-container {
-    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
-}
-
-:global(html.dark) .security-card {
-    background: rgba(26, 26, 26, 0.95);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(64, 64, 64, 0.5);
-}
-
-:global(html.dark) .card-header {
-    text-decoration: white;
-    background: rgba(38, 38, 38, 0.95);
-    border-bottom-color: rgba(64, 64, 64, 0.5);
-}
-
-:global(html.dark) .card-title {
-    color: #f5f5f5;
-}
-
-:global(html.dark) .section {
-    background: rgba(38, 38, 38, 0.5);
-    border-left-color: #818cf8;
-}
-
-:global(html.dark) .section-title {
-    color: #f5f5f5;
-}
-
-:global(html.dark) .section-description {
-    color: #a3a3a3;
-}
-
-:global(html.dark) .form-label {
-    color: #a3a3a3;
-}
-
-:global(html.dark) .form-input {
-    background: rgba(26, 26, 26, 0.95);
-    border-color: rgba(64, 64, 64, 0.5);
-    color: #f5f5f5;
-}
-
-:global(html.dark) .form-input:focus {
-    border-color: #818cf8;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
-}
-
-:global(html.dark) .info-box {
-    background: rgba(99, 102, 241, 0.15);
-    color: #818cf8;
-}
-
-:global(html.dark) .info-item {
-    border-bottom-color: rgba(64, 64, 64, 0.5);
-}
-
-:global(html.dark) .info-item h5 {
-    color: #f5f5f5;
-}
-
-:global(html.dark) .info-item p {
-    color: #a3a3a3;
-}
-
-:global(html.dark) .pin-status-badge.status-enabled {
-    background: rgba(16, 185, 129, 0.2);
-    color: #4ade80;
-}
-
-:global(html.dark) .pin-status-badge.status-disabled {
-    background: rgba(239, 68, 68, 0.2);
-    color: #f87171;
-}
+/* Page themes handled by variables */
 
 /* Responsive */
 @media (max-width: 768px) {

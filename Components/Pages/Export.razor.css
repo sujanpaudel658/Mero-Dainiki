@@ -1,17 +1,26 @@
 .export-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: var(--bg-primary);
     padding: 2rem 0;
 }
 
 .export-header {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white;
+    background: var(--bg-card);
+    color: var(--text-primary);
     padding: 3rem 2rem;
     text-align: center;
     margin-bottom: 2rem;
-    border-radius: 0 0 20px 20px;
-    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+    border-radius: 16px;
+    border: 1px solid var(--border-medium);
+    box-shadow: var(--shadow-sm);
+}
+
+.export-header .header-title i {
+    color: var(--success);
+}
+
+.export-header .header-subtitle {
+    color: var(--text-secondary);
 }
 
 .export-header .header-title {
@@ -221,7 +230,7 @@
 .results-section {
     margin-top: 2rem;
     padding-top: 2rem;
-    border-top: 2px solid #e9ecef;
+    border-top: 1px solid var(--border-medium);
 }
 
 .results-header {
@@ -343,9 +352,9 @@
 }
 
 .preset-btn {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white;
-    border: none;
+    background: var(--bg-tertiary);
+    color: var(--success);
+    border: 1px solid var(--border-medium);
     border-radius: 8px;
     padding: 1rem;
     font-weight: 600;
@@ -359,7 +368,8 @@
 
 .preset-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    background: var(--bg-hover);
+    box-shadow: var(--shadow-sm);
 }
 
 .preset-btn i {
