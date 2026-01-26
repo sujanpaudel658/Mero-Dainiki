@@ -3,55 +3,43 @@
  * Handles toggling between light and dark modes via data-theme attribute and CSS classes.
  */
 window.themeManager = {
-    /**
-     * Sets the theme on the document root and persists it.
-     * @param {string} theme - 'light' or 'dark'
-     */
     setTheme: function (theme) {
-        // Set data attribute for global styles
-        document.documentElement.setAttribute('data-theme', theme);
-        document.documentElement.setAttribute('data-bs-theme', theme); // Bootstrap support
+        const root = document.documentElement;
+        let resolvedTheme = theme;
 
-        // Toggle CSS classes for scoped styles (html.dark / html.light)
-        document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(theme);
+        // If system mode is chosen, we need to determine the actual visual theme
+        if (theme === 'system') {
+            resolvedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        // Set attributes for CSS variable scoping
+        root.setAttribute('data-theme', resolvedTheme);
+        root.setAttribute('data-mode', theme); // Store the original selection
+        root.setAttribute('data-bs-theme', resolvedTheme);
+
+        // Update classes
+        root.classList.remove('light', 'dark');
+        root.classList.add(resolvedTheme);
 
         localStorage.setItem('theme', theme);
-        console.log(`Theme set to: ${theme}`);
+        console.log(`Theme selection: ${theme}, Resolved to: ${resolvedTheme}`);
     },
 
-    /**
-     * Gets the current theme from local storage or system preference.
-     * @returns {string} 'light' or 'dark'
-     */
     getTheme: function () {
-        const storedTheme = localStorage.getItem('theme');
-        if (storedTheme) {
-            return storedTheme;
-        }
-        // Fallback to system preference
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            return 'dark';
-        }
-        return 'light';
+        return localStorage.getItem('theme') || 'system';
     },
 
-    /**
-     * Initializes the theme on load.
-     */
     initTheme: function () {
-        const theme = this.getTheme();
-        this.setTheme(theme);
+        this.setTheme(this.getTheme());
     }
 };
 
-// Initialize immediately to prevent flash
+// Initialize immediately
 window.themeManager.initTheme();
 
-// Listen for system changes
+// Listen for system changes and update if 'system' is currently selected
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-    if (!localStorage.getItem('theme')) {
-        // Only react to system change if user hasn't manually set a preference
-        window.themeManager.setTheme(e.matches ? 'dark' : 'light');
+    if (window.themeManager.getTheme() === 'system') {
+        window.themeManager.setTheme('system');
     }
 });
