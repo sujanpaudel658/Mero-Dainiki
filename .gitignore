@@ -28,3 +28,11 @@ Thumbs.db
 # Others
 node_modules/
 wwwroot/css/bootstrap/
+
+# Build Logs & Docs (Per User Request)
+*.md
+*.txt
+*.log
+.agent/
+.gemini/
+build_*.txt
