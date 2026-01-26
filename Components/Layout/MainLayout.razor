@@ -1,13 +1,132 @@
 ﻿@inherits LayoutComponentBase
+@using Mero_Dainiki.Services
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+@inject IThemeService ThemeService
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
+<div class="app-shell">
+    <!-- Premium App Bar -->
+    <header class="appbar">
+        <div class="appbar-container">
+            <div class="appbar-brand">
+                <a href="@(IsAuthenticated ? "/dashboard" : "/")" class="brand-logo">
+                    <span class="brand-icon">📔</span>
+                    <span class="brand-text">Mero Dainiki</span>
+                </a>
+            </div>
+            
+            <div class="appbar-actions">
+                <button class="btn btn-theme-toggle me-3" @onclick="ToggleTheme" title="Switch Theme">
+                    <i class="bi @(ThemeService.CurrentTheme == ThemeMode.Dark ? "bi-sun-fill" : "bi-moon-stars-fill")"></i>
+                </button>
+
+                @if (!IsAuthenticated && !IsCheckingAuth)
+                {
+                    <button class="btn btn-primary btn-sm me-2" @onclick="NavigateToLogin">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
+                    </button>
+                    <a href="/register" class="btn btn-outline-primary btn-sm me-2">
+                        <i class="bi bi-person-plus me-1"></i>Register
+                    </a>
+                }
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="page-layout">
+        @if (IsAuthenticated)
+        {
+            <aside class="sidebar">
+                <NavMenu />
+            </aside>
+        }
+
+        <!-- Page Content with Transitions -->
+        <main class="main-content @(!IsAuthenticated ? "full-width" : "")">
+            <div class="page-shell">
+                <article class="content @PageTransitionClass" @key="CurrentPath">
+                    @Body
+                </article>
+            </div>
+        </main>
     </div>
-
-    <main>
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
 </div>
+
+@code {
+    private string PageTransitionClass { get; set; } = "page-enter";
+    private string CurrentPath { get; set; } = "";
+    private bool IsAuthenticated { get; set; } = false;
+    private bool IsCheckingAuth { get; set; } = true;
+
+    protected override void OnInitialized()
+    {
+        CurrentPath = NavigationManager.Uri;
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ThemeService.InitializeThemeAsync();
+            ThemeService.OnThemeChanged += StateHasChanged;
+            
+            await CheckAuthentication();
+            StateHasChanged();
+        }
+    }
+    
+    private async Task ToggleTheme()
+    {
+        await ThemeService.ToggleThemeAsync();
+    }
+    
+    private void NavigateToLogin()
+    {
+        NavigationManager.NavigateTo("/login");
+    }
+
+    private async Task CheckAuthentication()
+    {
+        try
+        {
+            var authToken = await JS.InvokeAsync<string>("localStorage.getItem", "authToken");
+            var userId = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+            // var prefsUserId = Preferences.Default.Get("current_user_id", 0);
+            
+            IsAuthenticated = (!string.IsNullOrEmpty(authToken) && !string.IsNullOrEmpty(userId));
+                              // || prefsUserId > 0;
+        }
+        catch
+        {
+            IsAuthenticated = false;
+        }
+        finally
+        {
+            IsCheckingAuth = false;
+        }
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        // Trigger page transition animation
+        PageTransitionClass = "";
+        StateHasChanged();
+        
+        // Small delay to allow the DOM to update, then add animation class
+        Task.Run(async () => 
+        {
+            await Task.Delay(10);
+            PageTransitionClass = "page-enter";
+            CurrentPath = e.Location;
+            await InvokeAsync(StateHasChanged);
+        });
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+        ThemeService.OnThemeChanged -= StateHasChanged;
+    }
+}

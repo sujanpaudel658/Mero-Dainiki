@@ -1,8 +1,9 @@
 ﻿@using Mero_Dainiki.Services
+@inject IAuthService AuthService
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/">Mero-Dainiki</a>
+        <a class="navbar-brand" href="/dashboard">Mero Dainiki</a>
         <button class="btn btn-outline-primary ms-2" @onclick="ToggleTheme" title="Toggle theme">
             <span class="bi @(IsDarkTheme ? "bi-moon-stars-fill" : "bi-sun-fill")" style="font-size: 1.2rem;"></span>
         </button>
@@ -14,14 +15,7 @@
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill" aria-hidden="true"></span>
-                Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/dashboard">
+            <NavLink class="nav-link" href="/dashboard" Match="NavLinkMatch.All">
                 <span class="bi bi-speedometer2" aria-hidden="true"></span>
                 Dashboard
             </NavLink>
@@ -112,29 +106,35 @@
 
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
+    
+    [Inject]
+    private ISecurityService SecurityService { get; set; } = default!;
+
+@using Mero_Dainiki.Entities
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            // Check authentication
-            var authToken = await JS.InvokeAsync<string>("localStorage.getItem", "authToken");
-            var username = await JS.InvokeAsync<string>("localStorage.getItem", "username");
+            // Check authentication using AuthService (Preferences-based)
+            IsAuthenticated = await AuthService.IsAuthenticatedAsync();
             
-            IsAuthenticated = !string.IsNullOrEmpty(authToken);
-            Username = username ?? "User";
+            // Get username from localStorage if authenticated (for display)
+            if (IsAuthenticated)
+            {
+                var username = await JS.InvokeAsync<string>("localStorage.getItem", "username");
+                Username = username ?? "User";
+            }
             
             try
             {
-                var savedTheme = await ThemeService.GetThemeAsync();
-                IsDarkTheme = savedTheme == "dark";
-                await JS.InvokeVoidAsync("themeManager.setTheme", savedTheme);
+                await ThemeService.InitializeThemeAsync();
+                IsDarkTheme = ThemeService.CurrentTheme == ThemeMode.Dark;
                 StateHasChanged();
             }
             catch
             {
                 IsDarkTheme = false;
-                await JS.InvokeVoidAsync("themeManager.setTheme", "light");
             }
         }
     }
@@ -142,18 +142,23 @@
     private async Task ToggleTheme()
     {
         IsDarkTheme = !IsDarkTheme;
-        var themeClass = IsDarkTheme ? "dark" : "light";
-        await ThemeService.SaveThemeAsync(themeClass);
-        await JS.InvokeVoidAsync("themeManager.setTheme", themeClass);
+        var theme = IsDarkTheme ? ThemeMode.Dark : ThemeMode.Light;
+        await ThemeService.SetThemeAsync(theme);
         StateHasChanged();
     }
 
     private async Task HandleLogout()
     {
-        // Clear authentication data
+        // Clear authentication data from AuthService (Preferences)
+        await AuthService.LogoutAsync();
+        
+        // Also clear localStorage for backward compatibility
         await JS.InvokeVoidAsync("localStorage.removeItem", "authToken");
         await JS.InvokeVoidAsync("localStorage.removeItem", "userId");
         await JS.InvokeVoidAsync("localStorage.removeItem", "username");
+        
+        // Reset security service unlock state
+        SecurityService.ResetUnlockState();
         
         IsAuthenticated = false;
         Username = string.Empty;
