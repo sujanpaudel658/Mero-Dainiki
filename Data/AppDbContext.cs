@@ -18,6 +18,7 @@ namespace Mero_Dainiki.Data
 
         public AppDbContext()
         {
+            // Set local database path (merodainiki.db) in the application data folder
             var folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             _dbPath = Path.Combine(folder, "merodainiki.db");
         }
@@ -36,6 +37,10 @@ namespace Mero_Dainiki.Data
             }
         }
 
+        /// <summary>
+        /// Configures the relational mappings and constraints for the SQLite database.
+        /// Handles Requirement SN 11: Security & Privacy through User-Record isolation.
+        /// </summary>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -106,7 +111,8 @@ namespace Mero_Dainiki.Data
                 // Unique tag name per user
                 entity.HasIndex(e => new { e.UserId, e.Name }).IsUnique();
 
-                // Many-to-many relationship: JournalEntry <-> Tag
+                // Many-to-many relationship: JournalEntry <~> Tag
+                // Requirement SN 4: Tagging System classification
                 entity.HasMany(t => t.JournalEntries)
                     .WithMany(e => e.Tags)
                     .UsingEntity("JournalEntryTag");
