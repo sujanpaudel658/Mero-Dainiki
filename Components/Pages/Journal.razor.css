@@ -1,10 +1,18 @@
 .journal-modern-container {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: calc(100vh - 64px);
     background: var(--bg-primary);
-    overflow: hidden;
+    overflow: hidden !important;
     transition: background 0.3s ease;
+}
+
+/* Ensure the layout parent doesn't scroll when journaling */
+:global(.main-content),
+:global(.page-shell),
+:global(.content) {
+    overflow: hidden !important;
+    height: 100% !important;
 }
 
 /* Header */
@@ -107,7 +115,7 @@
 /* Main Content */
 .journal-main-modern {
     flex: 1;
-    overflow-y: auto;
+    overflow: hidden;
     padding: 1.5rem;
 }
 
@@ -158,9 +166,9 @@
 
 .input-modern:focus {
     outline: none;
-    border-color: #6366f1;
+    border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    background: white;
+    background: var(--bg-input);
 }
 
 .input-title {
@@ -207,6 +215,22 @@
     color: var(--text-primary) !important;
 }
 
+:global(html.dark) .ql-snow .ql-picker-options {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-medium) !important;
+    color: var(--text-primary) !important;
+}
+
+:global(html.dark) .ql-snow .ql-picker-item {
+    color: var(--text-primary) !important;
+}
+
+:global(html.dark) .ql-snow .ql-picker-item:hover,
+:global(html.dark) .ql-snow .ql-picker-label:hover {
+    color: var(--primary) !important;
+    background-color: var(--bg-hover) !important;
+}
+
 .ql-editor {
     min-height: 400px;
     color: var(--text-primary) !important;
@@ -231,7 +255,7 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    overflow-y: auto;
+    overflow: hidden;
     padding: 0.25rem;
 }
 
@@ -261,8 +285,8 @@
     justify-content: center;
     width: 100%;
     padding: 0.5rem;
-    border: 2px solid #e2e8f0;
-    background: white;
+    border: 2px solid var(--border-medium);
+    background: var(--bg-card);
     border-radius: 6px;
     cursor: pointer;
     font-size: 1.25rem;
@@ -271,9 +295,9 @@
 }
 
 .mood-btn:hover {
-    border-color: #6366f1;
+    border-color: var(--primary);
     transform: scale(1.05);
-    background: #f5f7fa;
+    background: var(--bg-hover);
 }
 
 .mood-btn.selected {
@@ -296,8 +320,8 @@
     flex-direction: column;
     width: 100%;
     padding: 0.4rem;
-    border: 2px solid #e2e8f0;
-    background: white;
+    border: 2px solid var(--border-medium);
+    background: var(--bg-card);
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -306,8 +330,8 @@
 }
 
 .secondary-mood-btn:hover {
-    border-color: #6366f1;
-    background: #f5f7fa;
+    border-color: var(--primary);
+    background: var(--bg-hover);
 }
 
 .secondary-mood-btn.selected {
@@ -330,11 +354,11 @@
 .select-modern {
     width: 100%;
     padding: 0.6rem;
-    border: 2px solid #e2e8f0;
+    border: 2px solid var(--border-medium);
     border-radius: 6px;
     font-size: 0.85rem;
-    background: white;
-    color: #2d3748;
+    background: var(--bg-input);
+    color: var(--text-primary);
     cursor: pointer;
     transition: all 0.3s ease;
 }
@@ -353,12 +377,12 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.65rem;
-    background: white;
-    border: 2px solid #e2e8f0;
+    background: var(--bg-card);
+    border: 2px solid var(--border-medium);
     border-radius: 6px;
     cursor: pointer;
     font-weight: 500;
-    color: #2d3748;
+    color: var(--text-primary);
     font-size: 0.85rem;
     transition: all 0.3s ease;
 }
@@ -387,9 +411,9 @@
 }
 
 .btn-delete-modern {
-    background: white;
-    color: #dc2626;
-    border-color: #fecaca;
+    background: var(--bg-card);
+    color: var(--danger);
+    border-color: var(--danger);
 }
 
 .btn-delete-modern:hover {
@@ -459,94 +483,95 @@
 }
 
 /* Dark Mode Support */
-/* Dark Mode */
 :global(html.dark) .journal-modern-container {
-    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
 }
 
 :global(html.dark) .label-modern {
-    color: #f5f5f5;
+    color: var(--text-primary);
 }
 
 :global(html.dark) .input-modern,
 :global(html.dark) .textarea-modern {
-    background: #171717;
-    border-color: #404040;
-    color: #f5f5f5;
+    background: var(--bg-input);
+    border-color: var(--border-medium);
+    color: var(--text-primary);
 }
 
 :global(html.dark) .input-modern:focus,
 :global(html.dark) .textarea-modern:focus {
-    border-color: #818cf8;
+    border-color: var(--primary-light);
     box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
 }
 
 :global(html.dark) .formatting-toolbar-modern {
-    background: linear-gradient(135deg, #171717 0%, #0a0a0a 100%);
-    border-color: #404040;
+    background: var(--bg-tertiary);
+    border-color: var(--border-medium);
 }
 
 :global(html.dark) .toolbar-btn {
-    background: #0a0a0a;
-    color: #a3a3a3;
-    border-color: #404040;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border-color: var(--border-medium);
 }
 
 :global(html.dark) .toolbar-btn:hover {
-    background: #171717;
-    border-color: #818cf8;
-    color: #818cf8;
+    background: var(--bg-hover);
+    border-color: var(--primary-light);
+    color: var(--primary-light);
 }
 
 :global(html.dark) .markdown-preview-modern {
-    background: #171717;
-    border-color: #404040;
-    color: #a3a3a3;
+    background: var(--bg-input);
+    border-color: var(--border-medium);
+    color: var(--text-secondary);
 }
 
 :global(html.dark) .card-modern {
-    background: #171717;
-    border-color: #404040;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    background: var(--bg-card);
+    border-color: var(--border-medium);
+    box-shadow: var(--shadow-sm);
 }
 
 :global(html.dark) .mood-btn,
 :global(html.dark) .secondary-mood-btn {
-    background: #0a0a0a;
-    border-color: #404040;
+    background: var(--bg-secondary);
+    border-color: var(--border-medium);
+    color: var(--text-primary);
 }
 
 :global(html.dark) .mood-btn:hover,
 :global(html.dark) .secondary-mood-btn:hover {
-    border-color: #818cf8;
-    background: #171717;
+    border-color: var(--primary-light);
+    background: var(--bg-hover);
 }
 
 :global(html.dark) .mood-label {
-    color: #a3a3a3;
+    color: var(--text-secondary);
 }
 
 :global(html.dark) .select-modern {
-    background: #171717;
-    border-color: #404040;
-    color: #f5f5f5;
+    background: var(--bg-input);
+    border-color: var(--border-medium);
+    color: var(--text-primary);
 }
 
 :global(html.dark) .toggle-btn-modern,
 :global(html.dark) .btn-cancel-modern,
 :global(html.dark) .btn-delete-modern {
-    background: #0a0a0a;
-    border-color: #404040;
-    color: #a3a3a3;
+    background: var(--bg-secondary);
+    border-color: var(--border-medium);
+    color: var(--text-secondary);
 }
 
 :global(html.dark) .btn-delete-modern {
-    color: #fca5a5;
+    color: var(--danger);
+    border-color: var(--danger);
 }
 
 :global(html.dark) .btn-delete-modern:hover {
-    background: #7f1d1d;
-    border-color: #dc2626;
+    background: var(--danger-light);
+    color: white;
 }
 
 /* Scrollbar Styling */
@@ -596,9 +621,9 @@
 
 .tag-select-btn {
     padding: 0.4rem 0.75rem;
-    border: 2px solid #e2e8f0;
-    background: white;
-    color: #2d3748;
+    border: 2px solid var(--border-medium);
+    background: var(--bg-card);
+    color: var(--text-primary);
     border-radius: 20px;
     font-size: 0.8rem;
     font-weight: 500;
@@ -607,8 +632,8 @@
 }
 
 .tag-select-btn:hover {
-    border-color: #6366f1;
-    background: #f5f7fa;
+    border-color: var(--primary);
+    background: var(--bg-hover);
 }
 
 .tag-select-btn.selected {
@@ -679,46 +704,41 @@
     color: var(--text-primary) !important;
 }
 
-/* EasyMDE Dark Mode Specifics */
-:global([data-theme="dark"]) .editor-toolbar {
-    background: #1e293b !important;
-    border-color: #334155 !important;
+/* EasyMDE/Quill global Dark Mode Specifics */
+:global(html.dark) .editor-toolbar,
+:global(html.dark) .ql-toolbar {
+    background: var(--bg-tertiary) !important;
+    border-color: var(--border-medium) !important;
 }
 
-:global([data-theme="dark"]) .CodeMirror,
-:global([data-theme="dark"]) .CodeMirror-scroll,
-:global([data-theme="dark"]) .EasyMDEContainer,
-:global([data-theme="dark"]) .CodeMirror-lines,
-:global([data-theme="dark"]) .CodeMirror-code,
-:global([data-theme="dark"]) .cm-s-default,
-:global([data-theme="dark"]) .editor-preview-side,
-:global([data-theme="dark"]) .CodeMirror-vscrollbar,
-:global([data-theme="dark"]) .CodeMirror-hscrollbar,
-:global([data-theme="dark"]) .CodeMirror-scrollbar-filler,
-:global([data-theme="dark"]) .CodeMirror-gutter-filler,
-:global([data-theme="dark"]) .editor-preview {
-    background: #0f172a !important;
-    background-color: #0f172a !important;
-    color: #f8fafc !important;
-    border-color: #334155 !important;
+:global(html.dark) .CodeMirror,
+:global(html.dark) .CodeMirror-scroll,
+:global(html.dark) .EasyMDEContainer,
+:global(html.dark) .CodeMirror-lines,
+:global(html.dark) .ql-container,
+:global(html.dark) .ql-editor {
+    background: var(--bg-input) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-medium) !important;
 }
 
 
-:global([data-theme="dark"]) .CodeMirror-cursor {
+:global(html.dark) .CodeMirror-cursor {
     border-left: 2px solid white !important;
 }
 
-:global([data-theme="dark"]) .editor-toolbar button {
-    color: #cbd5e1 !important;
+:global(html.dark) .editor-toolbar button,
+:global(html.dark) .ql-toolbar button {
+    color: var(--text-secondary) !important;
 }
 
-:global([data-theme="dark"]) .editor-toolbar button:hover {
-    background: #334155 !important;
+:global(html.dark) .editor-toolbar button:hover,
+:global(html.dark) .ql-toolbar button:hover {
+    background: var(--bg-hover) !important;
 }
 
-/* Fix for standard CodeMirror themes inside EasyMDE */
-:global([data-theme="dark"]) .CodeMirror-selected {
-    background: #334155 !important;
+:global(html.dark) .CodeMirror-selected {
+    background: var(--bg-hover) !important;
 }
 
 /* PIN Verification Modal */

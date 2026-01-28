@@ -47,7 +47,7 @@
                     }
                     <button class="mood-filter-btn @(SelectedMood == null ? "selected" : "")" 
                             @onclick="() => SelectedMood = null">
-                        All
+                        <span>All</span>
                     </button>
                 </div>
             </div>
@@ -207,36 +207,52 @@
         }
     }
 
+    /// <summary>
+    /// Core application logic for filtering journal entries.
+    /// This method performs in-memory filtering based on user-selected criteria.
+    /// </summary>
     private void ApplyFilters()
     {
         var filtered = AllEntries.Where(e =>
         {
+            // Text Search Filter: Checks both Title and Content
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
                 var searchLower = SearchText.ToLower();
                 if (!e.Title.ToLower().Contains(searchLower) && !e.Content.ToLower().Contains(searchLower))
                     return false;
             }
+            
+            // Date Range Filter: Excludes entries outside the user-defined range
             if (e.Date.Date < StartDate.Date || e.Date.Date > EndDate.Date)
                 return false;
+            
+            // Mood Filter: Shows only entries matching the selected emotional state
             if (SelectedMood.HasValue && e.PrimaryMood != SelectedMood.Value)
                 return false;
+            
+            // Tag Filter: Shows entries that contain at least one of the selected tags
             if (SelectedTags.Any() && !e.Tags.Any(t => SelectedTags.Contains(t.Id)))
                 return false;
+                
             return true;
         }).ToList();
 
         TotalEntries = filtered.Count;
         TotalPages = (int)Math.Ceiling((double)TotalEntries / PageSize);
-        CurrentPage = 1;
+        CurrentPage = 1; // Reset to page 1 after every filter change
         UpdateDisplayedEntries(filtered);
     }
 
+    /// <summary>
+    /// Slices the filtered data into a single page of results.
+    /// Implementation of Requirement SN 6: Paginated Journal View.
+    /// </summary>
     private void UpdateDisplayedEntries(List<JournalEntry> entries)
     {
         DisplayedEntries = entries
-            .Skip((CurrentPage - 1) * PageSize)
-            .Take(PageSize)
+            .Skip((CurrentPage - 1) * PageSize) // Logic: Skip entries from previous pages
+            .Take(PageSize)                   // Logic: Only take the number of entries allowed per page
             .ToList();
     }
 

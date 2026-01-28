@@ -19,6 +19,7 @@
         <p>Loading...</p>
     </Mero_Dainiki.Components.Shared.AuthGuard>
 }
+// Lifecycle Management: Checks if a PIN is required before revealing journal data
 else if (PinRequired && !PinVerified)
 {
     @* Override layout transitions that break full-screen centered overlays *@
@@ -100,6 +101,7 @@ else
                         <span class="word-count">Words: @WordCount</span>
                     </div>
 
+                    <!-- Rich Text Editor: Requirement SN 2 -->
                     <div id="journal-editor">
                         <div class="p-5 text-center text-muted">
                             <span class="spinner-border spinner-border-sm me-2"></span>
@@ -163,11 +165,16 @@ else
                 </div>
 
                 <!-- Tags Selection -->
-                @if (AvailableTags.Any())
-                {
-                    <div class="card-modern">
-                        <label class="label-modern d-block mb-2">Tags</label>
-                        <div class="tags-selection">
+                <div class="card-modern">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="label-modern m-0">Tags</label>
+                        <button class="btn btn-sm btn-outline-primary py-0" style="font-size: 0.7rem;" @onclick="CreateNewTag">
+                            <i class="bi bi-plus-lg"></i> New
+                        </button>
+                    </div>
+                    <div class="tags-selection">
+                        @if (AvailableTags.Any())
+                        {
                             @foreach (var tag in AvailableTags)
                             {
                                 var isSelected = EntryModel.TagIds?.Contains(tag.Id) ?? false;
@@ -176,10 +183,17 @@ else
                                     @tag.Name
                                 </button>
                             }
-                        </div>
-                        <small class="text-muted d-block mt-2">Selected: @(EntryModel.TagIds?.Count ?? 0) tag(s)</small>
+                        }
+                        else
+                        {
+                            <span class="text-muted small">No tags created yet.</span>
+                        }
                     </div>
-                }
+                    @if (AvailableTags.Any())
+                    {
+                        <small class="text-muted d-block mt-2">Selected: @(EntryModel.TagIds?.Count ?? 0) tag(s)</small>
+                    }
+                </div>
 
                 <!-- Delete Button (if editing) -->
                 @if (IsEdit)
@@ -312,6 +326,7 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        // Initializes the Quill.js editor via JavaScript Interop after the DOM is ready
         if (IsAuthenticated && PinVerified && !_editorInitialized)
         {
             _editorInitialized = true;
@@ -408,5 +423,38 @@ else
     private async void HandlePinKeyPress(KeyboardEventArgs e) { if (e.Key == "Enter") await VerifyPin(); }
     private void Cancel() => Navigation.NavigateTo("/browse");
     private void GoBack() => Navigation.NavigateTo("/browse");
+
+    private async Task CreateNewTag()
+    {
+        var tagName = await JS.InvokeAsync<string>("prompt", "Enter new tag name:");
+        if (string.IsNullOrWhiteSpace(tagName)) return;
+
+        var result = await TagService.CreateTagAsync(new Mero_Dainiki.Models.TagViewModel
+        {
+            Name = tagName,
+            Color = "#6366f1" // Default brand color
+        });
+
+        if (result.Success)
+        {
+            // Reload tags after creation
+            var tagsResult = await TagService.GetAllTagsAsync();
+            if (tagsResult.Success && tagsResult.Data != null)
+            {
+                AvailableTags = tagsResult.Data;
+            }
+            
+            // Automatically select the new tag
+            if (result.Data != null)
+            {
+                ToggleTag(result.Data.Id);
+            }
+        }
+        else
+        {
+            Message = result.ErrorMessage ?? "Failed to create tag";
+            IsSuccess = false;
+        }
+    }
 }
 
