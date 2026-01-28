@@ -24,5 +24,37 @@ namespace Mero_Dainiki.Services
         /// Validates if a user is authenticated
         /// </summary>
         protected bool IsUserAuthenticated => CurrentUserId > 0;
+
+        /// <summary>
+        /// Executes an async operation with standardized error handling
+        /// </summary>
+        protected async Task<Common.ServiceResult<T>> ExecuteAsync<T>(Func<Task<T>> action, string errorPrefix = "Error")
+        {
+            try
+            {
+                var data = await action();
+                return Common.ServiceResult<T>.Ok(data);
+            }
+            catch (Exception ex)
+            {
+                return Common.ServiceResult<T>.Fail($"{errorPrefix}: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Executes an async void operation with standardized error handling
+        /// </summary>
+        protected async Task<Common.ServiceResult> ExecuteVoidAsync(Func<Task> action, string errorPrefix = "Error")
+        {
+            try
+            {
+                await action();
+                return Common.ServiceResult.Ok();
+            }
+            catch (Exception ex)
+            {
+                return Common.ServiceResult.Fail($"{errorPrefix}: {ex.Message}");
+            }
+        }
     }
 }

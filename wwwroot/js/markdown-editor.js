@@ -70,19 +70,17 @@ window.markdownEditor = {
         const isDark = document.documentElement.classList.contains('dark');
         const containers = document.querySelectorAll('.ql-container, .ql-toolbar');
         containers.forEach(el => {
-            if (isDark) {
-                el.style.backgroundColor = '#1e1e24';
-                el.style.borderColor = 'rgba(255,255,255,0.2)';
-                el.style.color = '#f9fafb';
+            el.style.backgroundColor = 'var(--bg-card)';
+            el.style.borderColor = 'var(--border-medium)';
+            el.style.color = 'var(--text-primary)';
 
-                // Active button styling
-                const picks = el.querySelectorAll('.ql-picker, .ql-stroke, .ql-fill');
-                picks.forEach(p => p.style.color = '#f9fafb');
-            } else {
-                el.style.backgroundColor = '#fff';
-                el.style.borderColor = '#ccc';
-                el.style.color = '#101828';
-            }
+            // Update elements that Quill sets explicitly
+            const picks = el.querySelectorAll('.ql-picker, .ql-stroke, .ql-fill');
+            picks.forEach(p => {
+                if (p.classList.contains('ql-stroke')) p.style.stroke = 'var(--text-primary)';
+                else if (p.classList.contains('ql-fill')) p.style.fill = 'var(--text-primary)';
+                else p.style.color = 'var(--text-primary)';
+            });
         });
     },
 

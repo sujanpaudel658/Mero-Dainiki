@@ -132,15 +132,37 @@
                             <i class="bi bi-download me-1"></i>Export
                         </button>
                     </div>
-                    <hr />
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>Delete All Data</strong>
-                            <p class="text-muted mb-0 small">Permanently remove all entries</p>
-                        </div>
-                        <button class="btn btn-outline-danger" @onclick="DeleteAllData">
-                            <i class="bi bi-trash me-1"></i>Delete
-                        </button>
+                </div>
+            </div>
+
+            <!-- Tag Management -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-tags me-2"></i>Tag Management</h5>
+                    <button class="btn btn-sm btn-primary" @onclick="ShowCreateTagPrompt">
+                        <i class="bi bi-plus-lg me-1"></i>New Tag
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="tags-container d-flex flex-wrap gap-2">
+                        @if (UserTags.Any())
+                        {
+                            @foreach (var tag in UserTags)
+                            {
+                                <div class="tag-item badge d-flex align-items-center gap-2 p-2" 
+                                     style="background-color: @(tag.Color ?? "#6c757d"); color: white; border: 1px solid rgba(0,0,0,0.1);">
+                                    <span>@tag.Name</span>
+                                    <button class="btn-close btn-close-white small" 
+                                            style="font-size: 0.5rem;"
+                                            @onclick="() => DeleteTag(tag.Id)" 
+                                            title="Delete tag"></button>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted mb-0 small">You haven't created any custom tags yet. Create tags to better organize your journal entries.</p>
+                        }
                     </div>
                 </div>
             </div>
@@ -179,6 +201,9 @@
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
+    [Inject]
+    private ITagService TagService { get; set; } = default!;
+
 
     private string FontSize { get; set; } = "Medium";
     private bool DailyReminderEnabled { get; set; } = true;
@@ -188,6 +213,7 @@
     private bool IsSettingsSuccess { get; set; } = false;
     private string UserEmail { get; set; } = string.Empty;
     private string Username { get; set; } = string.Empty;
+    private List<Tag> UserTags { get; set; } = new();
 
 @using Mero_Dainiki.Entities
 
@@ -212,7 +238,17 @@
             ReminderTime = await JS.InvokeAsync<string>("localStorage.getItem", "reminderTime") ?? "20:00";
             PinEnabled = await JS.InvokeAsync<bool>("eval", "JSON.parse(localStorage.getItem('pinEnabled') ?? 'false')");
             
+            await LoadTags();
             StateHasChanged();
+        }
+    }
+
+    private async Task LoadTags()
+    {
+        var result = await TagService.GetAllTagsAsync();
+        if (result.Success && result.Data != null)
+        {
+            UserTags = result.Data;
         }
     }
     
@@ -341,6 +377,49 @@
             // Clear localStorage
             await JS.InvokeVoidAsync("localStorage.clear");
             await JS.InvokeVoidAsync("alert", "All data has been deleted!");
+        }
+    }
+
+    private async Task ShowCreateTagPrompt()
+    {
+        var tagName = await JS.InvokeAsync<string>("prompt", "Enter tag name:");
+        if (string.IsNullOrWhiteSpace(tagName)) return;
+
+        var tagColor = await JS.InvokeAsync<string>("prompt", "Enter tag color (hex code, e.g., #6366f1) or leave empty for default:", "#6366f1");
+        if (string.IsNullOrWhiteSpace(tagColor)) tagColor = "#6366f1";
+
+        var result = await TagService.CreateTagAsync(new Mero_Dainiki.Models.TagViewModel
+        {
+            Name = tagName,
+            Color = tagColor
+        });
+
+        if (result.Success)
+        {
+            await LoadTags();
+            ShowSettingsMessage("Tag created successfully", true);
+        }
+        else
+        {
+            ShowSettingsMessage(result.ErrorMessage ?? "Failed to create tag", false);
+        }
+    }
+
+    private async Task DeleteTag(int id)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this tag? It will be removed from all entries.");
+        if (confirmed)
+        {
+            var result = await TagService.DeleteTagAsync(id);
+            if (result.Success)
+            {
+                await LoadTags();
+                ShowSettingsMessage("Tag deleted successfully", true);
+            }
+            else
+            {
+                ShowSettingsMessage(result.ErrorMessage ?? "Failed to delete tag", false);
+            }
         }
     }
 }
