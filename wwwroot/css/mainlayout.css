@@ -316,3 +316,9 @@ html {
 .hide-scrollbar::-webkit-scrollbar {
     display: none;
 }
+/* Fix for Double Scrollbar */
+html, body {
+    overflow: hidden !important;
+    height: 100vh !important;
+    margin: 0;
+}

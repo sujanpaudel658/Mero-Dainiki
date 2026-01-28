@@ -113,6 +113,14 @@ body {
     border: 1px solid var(--border-medium);
 }
 
+/* Hide Native Browser Password Reveal Button */
+input::-ms-reveal,
+input::-ms-clear,
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+    display: none !important;
+}
+
 /* Base Input Style that respects variables */
 input,
 select,
